@@ -1,26 +1,125 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --paper: #f4f1ea;
+    --paper-muted: #e8e3d5;
+    --paper-dark: #dad4c3;
+    --ink: #0d0d0d;
+    --ink-muted: #3a3a3a;
+    --pencil: #666666;
+    --punk-pink: #ff2a85;
+    --punk-yellow: #ffe600;
+    --punk-green: #00e676;
+    --punk-cyan: #00f0ff;
+    --punk-orange: #ff5500;
+  }
+
+  body {
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    background-image: 
+      radial-gradient(#1a1a1a 0.75px, transparent 0.75px),
+      radial-gradient(#1a1a1a 0.75px, var(--paper) 0.75px);
+    background-size: 30px 30px;
+    background-position: 0 0, 15px 15px;
+    background-attachment: fixed;
+    min-height: 100vh;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@theme {
+  --color-paper: var(--paper);
+  --color-paper-muted: var(--paper-muted);
+  --color-paper-dark: var(--paper-dark);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-pencil: var(--pencil);
+  --color-punk-pink: var(--punk-pink);
+  --color-punk-yellow: var(--punk-yellow);
+  --color-punk-green: var(--punk-green);
+  --color-punk-cyan: var(--punk-cyan);
+  --color-punk-orange: var(--punk-orange);
+
+  --shadow-hard-sm: 2px 2px 0px 0px #0d0d0d;
+  --shadow-hard: 4px 4px 0px 0px #0d0d0d;
+  --shadow-hard-lg: 6px 6px 0px 0px #0d0d0d;
+  --shadow-hard-xl: 8px 8px 0px 0px #0d0d0d;
+  --shadow-punk-pink: 4px 4px 0px 0px #ff2a85;
+  --shadow-punk-yellow: 4px 4px 0px 0px #ffe600;
+}
+
+/* Brutalist punk UI utilities */
+.punk-border {
+  border: 3px solid #0d0d0d;
+}
+
+.punk-border-thick {
+  border: 4px solid #0d0d0d;
+}
+
+.punk-border-dashed {
+  border: 3px dashed #0d0d0d;
+}
+
+.punk-shadow {
+  box-shadow: 4px 4px 0px 0px #0d0d0d;
+}
+
+.punk-shadow-lg {
+  box-shadow: 6px 6px 0px 0px #0d0d0d;
+}
+
+.punk-shadow-xl {
+  box-shadow: 8px 8px 0px 0px #0d0d0d;
+}
+
+.punk-shadow-pink {
+  box-shadow: 4px 4px 0px 0px #ff2a85;
+}
+
+.punk-shadow-yellow {
+  box-shadow: 4px 4px 0px 0px #ffe600;
+}
+
+.punk-button {
+  border: 3px solid #0d0d0d;
+  box-shadow: 4px 4px 0px 0px #0d0d0d;
+  font-weight: 800;
+  text-transform: uppercase;
+  transition: all 0.1s ease-in-out;
+}
+
+.punk-button:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px 0px #0d0d0d;
+}
+
+.punk-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px #0d0d0d;
+}
+
+/* Xerox Halftone / Grain Effect */
+.halftone-overlay {
+  background-image: repeating-radial-gradient(circle at 0 0, transparent 0, #000 1px, transparent 1px, transparent 100%);
+  background-size: 6px 6px;
+  opacity: 0.04;
+  pointer-events: none;
+}
+
+/* Hand-drawn scribble / jagged mask */
+.sketch-line {
+  position: relative;
+}
+.sketch-line::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 100%;
+  height: 4px;
+  background: currentColor;
+  transform: rotate(-0.5deg);
 }

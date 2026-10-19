@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" fill="#f4f1ea" rx="32"/>
+  <rect x="24" y="24" width="464" height="464" fill="none" stroke="#0d0d0d" stroke-width="16" stroke-dasharray="16 8" rx="20"/>
+  
+  <!-- Jagged Cat Head & Ears -->
+  <path d="M 120 400 L 120 220 L 170 100 L 230 200 L 282 200 L 342 100 L 392 220 L 392 400 Z" fill="#0d0d0d" />
+  
+  <!-- Punk Patch Accent -->
+  <polygon points="120,400 392,400 360,430 152,430" fill="#ff2a85" stroke="#0d0d0d" stroke-width="8" />
+  
+  <!-- Slanted Cat Eyes (Gritty Sketch style) -->
+  <polygon points="170,250 225,270 190,290" fill="#ffe600" stroke="#0d0d0d" stroke-width="4"/>
+  <polygon points="342,250 287,270 322,290" fill="#ffe600" stroke="#0d0d0d" stroke-width="4"/>
+  
+  <!-- Pupil slits -->
+  <line x1="195" y1="258" x2="195" y2="282" stroke="#0d0d0d" stroke-width="6" stroke-linecap="round"/>
+  <line x1="317" y1="258" x2="317" y2="282" stroke="#0d0d0d" stroke-width="6" stroke-linecap="round"/>
+  
+  <!-- Punk Stitches / Nose -->
+  <polygon points="256,310 240,325 272,325" fill="#ff2a85"/>
+  <line x1="256" y1="325" x2="256" y2="350" stroke="#f4f1ea" stroke-width="6"/>
+  <path d="M 230 355 Q 256 370 282 355" fill="none" stroke="#f4f1ea" stroke-width="6" stroke-linecap="round"/>
+  
+  <!-- Whisker scratches -->
+  <line x1="100" y1="290" x2="160" y2="300" stroke="#0d0d0d" stroke-width="8" stroke-linecap="square"/>
+  <line x1="90" y1="330" x2="165" y2="330" stroke="#0d0d0d" stroke-width="8" stroke-linecap="square"/>
+  <line x1="100" y1="370" x2="160" y2="360" stroke="#0d0d0d" stroke-width="8" stroke-linecap="square"/>
+  
+  <line x1="412" y1="290" x2="352" y2="300" stroke="#0d0d0d" stroke-width="8" stroke-linecap="square"/>
+  <line x1="422" y1="330" x2="347" y2="330" stroke="#0d0d0d" stroke-width="8" stroke-linecap="square"/>
+  <line x1="412" y1="370" x2="352" y2="360" stroke="#0d0d0d" stroke-width="8" stroke-linecap="square"/>
+  
+  <!-- Safety Pin Sketch -->
+  <path d="M 150 140 L 190 120" stroke="#ffe600" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="150" cy="140" r="8" fill="#ffe600" stroke="#0d0d0d" stroke-width="3"/>
+</svg>

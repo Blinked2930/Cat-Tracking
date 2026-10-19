@@ -3,13 +3,11 @@
 import React, { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { 
-  Plus, 
-  Trash2, 
-  Upload, 
-  Check, 
-  Code, 
-  ArrowRight
+import {
+  Plus,
+  Trash2,
+  Upload,
+  Code,
 } from "lucide-react";
 
 interface TaskFormItem {
@@ -41,6 +39,7 @@ export default function HouseholdSetupFlow({
   inviteCode: string;
   onComplete?: (catsData: any[]) => void;
 }) {
+  // -------- Hooks at the top, unconditionally --------
   const [cats, setCats] = useState<CatFormItem[]>([
     {
       id: "cat-setup-1",
@@ -69,19 +68,15 @@ export default function HouseholdSetupFlow({
   ]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<{ text: string; type: "error" | "success" } | null>(null);
+  const [statusMessage, setStatusMessage] = useState<{
+    text: string;
+    type: "error" | "success";
+  } | null>(null);
 
-  // Safe Convex mutation hooks
-  let generateUploadUrlMutation: any = null;
-  let saveHouseholdSetupMutation: any = null;
-  try {
-    generateUploadUrlMutation = useMutation(api.cats.generateUploadUrl);
-    saveHouseholdSetupMutation = useMutation(api.cats.saveHouseholdSetup);
-  } catch {
-    // Dev fallback
-  }
+  const generateUploadUrlMutation = useMutation(api.cats.generateUploadUrl);
+  const saveHouseholdSetupMutation = useMutation(api.cats.saveHouseholdSetup);
 
-  // Add another cat
+  // -------- Handlers --------
   const handleAddCat = () => {
     setCats([
       ...cats,
@@ -128,7 +123,9 @@ export default function HouseholdSetupFlow({
     const previewUrl = URL.createObjectURL(file);
     setCats(
       cats.map((c) =>
-        c.id === catId ? { ...c, photoFile: file, photoPreview: previewUrl } : c
+        c.id === catId
+          ? { ...c, photoFile: file, photoPreview: previewUrl }
+          : c
       )
     );
   };
@@ -159,10 +156,7 @@ export default function HouseholdSetupFlow({
     setCats(
       cats.map((c) => {
         if (c.id !== catId) return c;
-        return {
-          ...c,
-          tasks: c.tasks.filter((t) => t.id !== taskId),
-        };
+        return { ...c, tasks: c.tasks.filter((t) => t.id !== taskId) };
       })
     );
   };
@@ -177,7 +171,9 @@ export default function HouseholdSetupFlow({
         if (c.id !== catId) return c;
         return {
           ...c,
-          tasks: c.tasks.map((t) => (t.id === taskId ? { ...t, ...updates } : t)),
+          tasks: c.tasks.map((t) =>
+            t.id === taskId ? { ...t, ...updates } : t
+          ),
         };
       })
     );
@@ -189,11 +185,13 @@ export default function HouseholdSetupFlow({
 
     const namelessCat = cats.find((c) => !c.name.trim());
     if (namelessCat) {
-      setStatusMessage({ text: "Please enter a name for each cat", type: "error" });
+      setStatusMessage({
+        text: "Please enter a name for each cat",
+        type: "error",
+      });
       return;
     }
 
-    // Validate JSON configs
     for (const cat of cats) {
       for (const task of cat.tasks) {
         if (task.configJson.trim()) {
@@ -216,9 +214,9 @@ export default function HouseholdSetupFlow({
       const payloadCats = [];
 
       for (const cat of cats) {
-        let storageId = null;
+        let storageId: string | null = null;
 
-        if (cat.photoFile && generateUploadUrlMutation && !householdId.startsWith("mock-")) {
+        if (cat.photoFile) {
           try {
             const uploadUrl = await generateUploadUrlMutation();
             const uploadRes = await fetch(uploadUrl, {
@@ -239,7 +237,9 @@ export default function HouseholdSetupFlow({
             title: t.title.trim(),
             type: t.type,
             frequency: t.frequency,
-            config: t.configJson.trim() ? JSON.parse(t.configJson.trim()) : undefined,
+            config: t.configJson.trim()
+              ? JSON.parse(t.configJson.trim())
+              : undefined,
           }));
 
         payloadCats.push({
@@ -250,12 +250,10 @@ export default function HouseholdSetupFlow({
         });
       }
 
-      if (saveHouseholdSetupMutation && !householdId.startsWith("mock-")) {
-        await saveHouseholdSetupMutation({
-          householdId: householdId as any,
-          cats: payloadCats,
-        });
-      }
+      await saveHouseholdSetupMutation({
+        householdId: householdId as any,
+        cats: payloadCats,
+      });
 
       if (onComplete) {
         onComplete(
@@ -275,15 +273,18 @@ export default function HouseholdSetupFlow({
         );
       }
     } catch (err: any) {
-      setStatusMessage({ text: err.message || "Failed to save setup", type: "error" });
+      setStatusMessage({
+        text: err.message || "Failed to save setup",
+        type: "error",
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // -------- Render --------
   return (
     <div className="w-full max-w-3xl mx-auto">
-      {/* Clean Header */}
       <div className="border-b-3 border-black pb-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black">
@@ -295,15 +296,19 @@ export default function HouseholdSetupFlow({
         </div>
 
         <div className="text-xs font-mono font-bold text-[#555]">
-          HOUSEHOLD: <span className="text-black font-mono font-bold">{householdName}</span>
+          HOUSEHOLD:{" "}
+          <span className="text-black font-mono font-bold">{householdName}</span>
+          {" • "}
+          <span className="text-black font-mono font-bold">{inviteCode}</span>
         </div>
       </div>
 
       {statusMessage && (
         <div
-          className={`mb-5 p-3 border-2 border-black text-xs font-mono font-bold flex items-center justify-between ${
-            statusMessage.type === "error" ? "bg-[#ff2a85] text-white" : "bg-[#ffe600] text-black"
-          }`}
+          className={`mb-5 p-3 border-2 border-black text-xs font-mono font-bold flex items-center justify-between ${statusMessage.type === "error"
+              ? "bg-[#ff2a85] text-white"
+              : "bg-[#ffe600] text-black"
+            }`}
         >
           <span>{statusMessage.text}</span>
           <button onClick={() => setStatusMessage(null)}>✕</button>
@@ -316,7 +321,6 @@ export default function HouseholdSetupFlow({
             key={cat.id}
             className="bg-[#faf8f5] border-3 border-black p-5 shadow-[4px_4px_0px_0px_#0d0d0d] space-y-4"
           >
-            {/* Cat Card Header */}
             <div className="flex items-center justify-between border-b-2 border-black/20 pb-3">
               <span className="font-mono font-black text-base uppercase text-black">
                 Cat #{catIdx + 1}
@@ -334,7 +338,6 @@ export default function HouseholdSetupFlow({
               )}
             </div>
 
-            {/* Cat Name & Photo Row */}
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
               <div className="sm:col-span-8">
                 <label className="block text-xs font-mono font-bold uppercase text-black mb-1">
@@ -350,7 +353,6 @@ export default function HouseholdSetupFlow({
                 />
               </div>
 
-              {/* Photo Upload */}
               <div className="sm:col-span-4">
                 <label className="block text-xs font-mono font-bold uppercase text-black mb-1">
                   Photo (Optional)
@@ -358,13 +360,17 @@ export default function HouseholdSetupFlow({
                 <div className="border-2 border-dashed border-black bg-white p-2 text-center flex items-center justify-center min-h-[46px]">
                   {cat.photoPreview ? (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono font-bold text-green-700">✓ Uploaded</span>
+                      <span className="text-xs font-mono font-bold text-green-700">
+                        ✓ Uploaded
+                      </span>
                       <button
                         type="button"
                         onClick={() =>
                           setCats(
                             cats.map((c) =>
-                              c.id === cat.id ? { ...c, photoFile: null, photoPreview: null } : c
+                              c.id === cat.id
+                                ? { ...c, photoFile: null, photoPreview: null }
+                                : c
                             )
                           )
                         }
@@ -393,7 +399,6 @@ export default function HouseholdSetupFlow({
               </div>
             </div>
 
-            {/* Routines Section */}
             <div className="pt-2">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-mono font-bold uppercase text-black">
@@ -420,7 +425,9 @@ export default function HouseholdSetupFlow({
                         type="text"
                         value={task.title}
                         onChange={(e) =>
-                          handleUpdateTask(cat.id, task.id, { title: e.target.value })
+                          handleUpdateTask(cat.id, task.id, {
+                            title: e.target.value,
+                          })
                         }
                         placeholder="Chore title (e.g. Kibble, Insulin)"
                         required
@@ -431,19 +438,29 @@ export default function HouseholdSetupFlow({
                         <div className="flex border border-black text-xs font-mono">
                           <button
                             type="button"
-                            onClick={() => handleUpdateTask(cat.id, task.id, { type: "checkbox" })}
-                            className={`px-2 py-0.5 font-bold ${
-                              task.type === "checkbox" ? "bg-black text-white" : "bg-white text-black"
-                            }`}
+                            onClick={() =>
+                              handleUpdateTask(cat.id, task.id, {
+                                type: "checkbox",
+                              })
+                            }
+                            className={`px-2 py-0.5 font-bold ${task.type === "checkbox"
+                                ? "bg-black text-white"
+                                : "bg-white text-black"
+                              }`}
                           >
                             Check
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleUpdateTask(cat.id, task.id, { type: "counter" })}
-                            className={`px-2 py-0.5 font-bold border-l border-black ${
-                              task.type === "counter" ? "bg-black text-[#ffe600]" : "bg-white text-black"
-                            }`}
+                            onClick={() =>
+                              handleUpdateTask(cat.id, task.id, {
+                                type: "counter",
+                              })
+                            }
+                            className={`px-2 py-0.5 font-bold border-l border-black ${task.type === "counter"
+                                ? "bg-black text-[#ffe600]"
+                                : "bg-white text-black"
+                              }`}
                           >
                             Counter
                           </button>
@@ -452,7 +469,9 @@ export default function HouseholdSetupFlow({
                         <select
                           value={task.frequency}
                           onChange={(e) =>
-                            handleUpdateTask(cat.id, task.id, { frequency: Number(e.target.value) })
+                            handleUpdateTask(cat.id, task.id, {
+                              frequency: Number(e.target.value),
+                            })
                           }
                           className="border border-black bg-white p-1 text-xs font-mono font-bold"
                         >
@@ -471,24 +490,31 @@ export default function HouseholdSetupFlow({
                       </div>
                     </div>
 
-                    {/* Toggleable instructions */}
                     <div className="pt-1">
                       <button
                         type="button"
                         onClick={() =>
-                          handleUpdateTask(cat.id, task.id, { isConfigOpen: !task.isConfigOpen })
+                          handleUpdateTask(cat.id, task.id, {
+                            isConfigOpen: !task.isConfigOpen,
+                          })
                         }
                         className="text-[10px] font-mono text-zinc-500 hover:text-black font-bold flex items-center gap-1"
                       >
                         <Code className="w-2.5 h-2.5" />
-                        <span>{task.isConfigOpen ? "Hide Instructions" : "+ Add Instructions / Rx"}</span>
+                        <span>
+                          {task.isConfigOpen
+                            ? "Hide Instructions"
+                            : "+ Add Instructions / Rx"}
+                        </span>
                       </button>
 
                       {task.isConfigOpen && (
                         <textarea
                           value={task.configJson}
                           onChange={(e) =>
-                            handleUpdateTask(cat.id, task.id, { configJson: e.target.value })
+                            handleUpdateTask(cat.id, task.id, {
+                              configJson: e.target.value,
+                            })
                           }
                           placeholder='{"dosage": "2 units", "notes": "After eating"}'
                           rows={2}
@@ -518,7 +544,9 @@ export default function HouseholdSetupFlow({
             disabled={isSubmitting}
             className="punk-button bg-[#ff2a85] text-white py-2.5 px-6 text-xs font-bold flex items-center gap-1.5 hover:bg-[#e01e72]"
           >
-            <span>{isSubmitting ? "Saving..." : "Save & Open Dashboard ➔"}</span>
+            <span>
+              {isSubmitting ? "Saving..." : "Save & Open Dashboard ➔"}
+            </span>
           </button>
         </div>
       </form>

@@ -6,12 +6,12 @@ import { api } from "../../convex/_generated/api";
 import JaggedCatSilhouette from "./JaggedCatSilhouette";
 import CatSetupModal from "./CatSetupModal";
 import CatDetailModal from "./CatDetailModal";
-import { 
-  Check, 
-  Plus, 
-  Copy, 
-  Users, 
-  ExternalLink
+import {
+  Check,
+  Plus,
+  Copy,
+  Users,
+  ExternalLink,
 } from "lucide-react";
 
 interface TaskItem {
@@ -37,6 +37,20 @@ interface CatBlockData {
   completionPercentage: number;
 }
 
+/**
+ * A "real" Convex document ID is a lowercase-alphanumeric string that does
+ * not start with "mock-" and is not one of our local placeholder IDs.
+ * We treat anything else as mock data and skip the backend query.
+ */
+function isRealConvexId(id: string | undefined | null): boolean {
+  if (!id) return false;
+  if (id.startsWith("mock-")) return false;
+  if (id === "squat-bedford") return false;
+  // Convex IDs are ~32 chars of base32-ish chars; we only need to reject
+  // obviously-local placeholders here.
+  return id.length >= 20;
+}
+
 export default function CatDashboard({
   householdId,
   householdName,
@@ -50,35 +64,36 @@ export default function CatDashboard({
   userName?: string;
   onLeaveHousehold?: () => void;
 }) {
-  const [isAddCatOpen, setIsAddCatOpen] = useState(false);
-  const [selectedCatForDetail, setSelectedCatForDetail] = useState<CatBlockData | null>(null);
-  const [copiedCode, setCopiedCode] = useState(false);
+  // -------- Hooks: every hook is called unconditionally, in order --------
 
+  const [isAddCatOpen, setIsAddCatOpen] = useState(false);
+  const [selectedCatForDetail, setSelectedCatForDetail] =
+    useState<CatBlockData | null>(null);
+  const [copiedCode, setCopiedCode] = useState(false);
   const [todayString, setTodayString] = useState("");
 
   useEffect(() => {
     setTodayString(new Date().toISOString().split("T")[0]);
   }, []);
 
-  // Safe Convex Queries & Mutations
-  let dashboardData: any = null;
-  let logTaskMutation: any = null;
-  let unlogTaskMutation: any = null;
-  let isLiveBackend = false;
+  // Compute this *before* useQuery so we can pass "skip" cleanly.
+  const shouldQueryBackend = isRealConvexId(householdId);
 
-  try {
-    dashboardData = useQuery(api.tasks.getDashboardData, {
-      householdId: householdId.startsWith("mock-") ? undefined : (householdId as any),
-      dateString: todayString,
-    });
-    logTaskMutation = useMutation(api.tasks.logTask);
-    unlogTaskMutation = useMutation(api.tasks.unlogTask);
-    isLiveBackend = Boolean(dashboardData && !householdId.startsWith("mock-"));
-  } catch {
-    // Dev fallback
-  }
+  // IMPORTANT: useQuery is called unconditionally. If we shouldn't query,
+  // we pass "skip" as the args, which is the documented Convex way to
+  // conditionally disable a query without violating the Rules of Hooks.
+  const dashboardData = useQuery(
+    api.tasks.getDashboardData,
+    shouldQueryBackend
+      ? { householdId: householdId as any, dateString: todayString }
+      : "skip"
+  );
 
-  // Simulated Local State for Instant Interaction & Dev Fallback
+  // useMutation has no conditional variant, but it is safe to call
+  // unconditionally — it just returns a function.
+  const logTaskMutation = useMutation(api.tasks.logTask);
+  const unlogTaskMutation = useMutation(api.tasks.unlogTask);
+
   const [localCats, setLocalCats] = useState<CatBlockData[]>([
     {
       _id: "cat-1",
@@ -161,35 +176,60 @@ export default function CatDashboard({
   const [activityFeed, setActivityFeed] = useState<
     Array<{ id: string | number; text: string; time: string }>
   >([
-    { id: "log-1", text: "Aline logged Morning Dry Kibble for Iggy Pop", time: "8:15 AM" },
-    { id: "log-2", text: "Dexter logged Insulin Injection for Iggy Pop", time: "8:42 AM" },
-    { id: "log-3", text: "Aline logged Joint Supplement for Lucifer", time: "9:00 AM" },
+    {
+      id: "log-1",
+      text: "Aline logged Morning Dry Kibble for Iggy Pop",
+      time: "8:15 AM",
+    },
+    {
+      id: "log-2",
+      text: "Dexter logged Insulin Injection for Iggy Pop",
+      time: "8:42 AM",
+    },
+    {
+      id: "log-3",
+      text: "Aline logged Joint Supplement for Lucifer",
+      time: "9:00 AM",
+    },
   ]);
 
-  // Active cats data from Convex or local state
+  // -------- Derived values (all hooks called above this point) --------
+
+  const isLiveBackend = useMemo(
+    () => Boolean(shouldQueryBackend && dashboardData),
+    [shouldQueryBackend, dashboardData]
+  );
+
   const activeCats: CatBlockData[] = useMemo(() => {
     if (isLiveBackend && dashboardData?.cats) {
-      return dashboardData.cats;
+      return dashboardData.cats as CatBlockData[];
     }
     return localCats;
   }, [isLiveBackend, dashboardData, localCats]);
 
-  // Task click handler
+  // -------- Handlers --------
+
   const handleToggleTask = async (catId: string, task: TaskItem) => {
-    const nowTime = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    const nowTime = new Date().toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+    });
 
     // Live Convex Mutation
-    if (isLiveBackend && logTaskMutation && unlogTaskMutation) {
+    if (isLiveBackend) {
       try {
         if (task.isDone && task.logs && task.logs.length > 0) {
           const lastLog = task.logs[task.logs.length - 1];
-          await unlogTaskMutation({ logId: lastLog._id });
+          await unlogTaskMutation({ logId: lastLog._id as any });
         } else {
           await logTaskMutation({
             taskId: task._id as any,
             catId: catId as any,
             dateString: todayString,
-            value: task.type === "counter" ? (task.completedCount || 0) + 1 : undefined,
+            value:
+              task.type === "counter"
+                ? (task.completedCount || 0) + 1
+                : undefined,
           });
         }
       } catch (err) {
@@ -251,9 +291,18 @@ export default function CatDashboard({
           }
         });
 
-        const totalReq = updatedTasks.reduce((acc, t) => acc + Math.max(1, t.frequency || 1), 0);
-        const compCount = updatedTasks.reduce((acc, t) => acc + (t.completedCount || 0), 0);
-        const compPct = totalReq > 0 ? Math.min(100, Math.round((compCount / totalReq) * 100)) : 0;
+        const totalReq = updatedTasks.reduce(
+          (acc, t) => acc + Math.max(1, t.frequency || 1),
+          0
+        );
+        const compCount = updatedTasks.reduce(
+          (acc, t) => acc + (t.completedCount || 0),
+          0
+        );
+        const compPct =
+          totalReq > 0
+            ? Math.min(100, Math.round((compCount / totalReq) * 100))
+            : 0;
 
         return {
           ...cat,
@@ -272,6 +321,8 @@ export default function CatDashboard({
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
+  // -------- Render --------
+
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6">
       {/* Clean Household Header */}
@@ -288,7 +339,9 @@ export default function CatDashboard({
             <span className="bg-black text-[#ffe600] px-1.5 py-0.5 border border-black font-mono">
               {inviteCode}
             </span>
-            <span className="text-[10px] text-zinc-500">{copiedCode ? "✓ COPIED" : "[COPY]"}</span>
+            <span className="text-[10px] text-zinc-500">
+              {copiedCode ? "✓ COPIED" : "[COPY]"}
+            </span>
           </button>
         </div>
 
@@ -311,24 +364,20 @@ export default function CatDashboard({
         </div>
       </div>
 
-      {/* ======================================================== */}
-      {/* VERTICALLY SPLIT SCREEN: ONE BLOCK PER CAT */}
-      {/* ======================================================== */}
+      {/* Vertically split screen: one block per cat */}
       <div
-        className={`grid gap-6 ${
-          activeCats.length === 1
+        className={`grid gap-6 ${activeCats.length === 1
             ? "grid-cols-1 max-w-xl mx-auto"
             : activeCats.length === 2
-            ? "grid-cols-1 md:grid-cols-2"
-            : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-        }`}
+              ? "grid-cols-1 md:grid-cols-2"
+              : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+          }`}
       >
         {activeCats.map((cat) => (
           <div
             key={cat._id}
             className="bg-[#faf8f5] border-3 border-black shadow-[6px_6px_0px_0px_#0d0d0d] flex flex-col justify-between overflow-hidden"
           >
-            {/* Top Cat Header */}
             <div className="bg-[#f4f1ea] border-b-3 border-black px-4 py-3 flex items-center justify-between">
               <h2 className="text-xl font-black uppercase tracking-tight text-black">
                 {cat.name}
@@ -338,7 +387,6 @@ export default function CatDashboard({
               </span>
             </div>
 
-            {/* Clickable Silhouette Block */}
             <div
               onClick={() => setSelectedCatForDetail(cat)}
               className="p-5 bg-[#f4f1ea] border-b-3 border-black flex flex-col items-center justify-center relative cursor-pointer group hover:bg-[#fffbe6] transition-colors"
@@ -358,40 +406,39 @@ export default function CatDashboard({
               </div>
             </div>
 
-            {/* Clean Chores Checklist */}
             <div className="p-4 bg-white flex-1 flex flex-col justify-between">
               <div className="space-y-2">
                 {cat.tasks.map((task) => (
                   <div
                     key={task._id}
                     onClick={() => handleToggleTask(cat._id, task)}
-                    className={`cursor-pointer border-2 border-black p-2.5 flex items-center justify-between transition-all select-none ${
-                      task.isDone
+                    className={`cursor-pointer border-2 border-black p-2.5 flex items-center justify-between transition-all select-none ${task.isDone
                         ? "bg-[#f4f1ea] text-[#777]"
                         : "bg-white text-black hover:border-black shadow-[2px_2px_0_0_#000]"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      {/* Checkbox or Counter Box */}
                       <div
-                        className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-xs transition-colors shrink-0 ${
-                          task.isDone ? "bg-black text-[#ffe600]" : "bg-white"
-                        }`}
+                        className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-xs transition-colors shrink-0 ${task.isDone ? "bg-black text-[#ffe600]" : "bg-white"
+                          }`}
                       >
                         {task.type === "counter" ? (
                           <span className="text-[10px]">
                             {task.completedCount || 0}/{task.frequency}
                           </span>
                         ) : (
-                          task.isDone && <Check className="w-3.5 h-3.5 stroke-[4]" />
+                          task.isDone && (
+                            <Check className="w-3.5 h-3.5 stroke-[4]" />
+                          )
                         )}
                       </div>
 
                       <div>
                         <p
-                          className={`font-mono text-xs font-bold uppercase tracking-tight ${
-                            task.isDone ? "line-through text-zinc-400" : "text-black"
-                          }`}
+                          className={`font-mono text-xs font-bold uppercase tracking-tight ${task.isDone
+                              ? "line-through text-zinc-400"
+                              : "text-black"
+                            }`}
                         >
                           {task.title}
                         </p>
@@ -421,7 +468,10 @@ export default function CatDashboard({
 
         <div className="font-mono text-xs space-y-1.5 max-h-32 overflow-y-auto">
           {activityFeed.map((item, idx) => (
-            <div key={`${item.id}-${idx}`} className="flex items-center justify-between text-zinc-700">
+            <div
+              key={`${item.id}-${idx}`}
+              className="flex items-center justify-between text-zinc-700"
+            >
               <span className="font-bold">• {item.text}</span>
               <span className="text-[10px] text-zinc-400">{item.time}</span>
             </div>
@@ -432,7 +482,10 @@ export default function CatDashboard({
       {/* Cat Detail Modal */}
       {selectedCatForDetail && (
         <CatDetailModal
-          cat={activeCats.find((c) => c._id === selectedCatForDetail._id) || selectedCatForDetail}
+          cat={
+            activeCats.find((c) => c._id === selectedCatForDetail._id) ||
+            selectedCatForDetail
+          }
           isOpen={Boolean(selectedCatForDetail)}
           onClose={() => setSelectedCatForDetail(null)}
           userName={userName}
@@ -440,7 +493,9 @@ export default function CatDashboard({
           onToggleTask={handleToggleTask}
           simulatedLogs={activityFeed
             .filter((item) =>
-              item.text.toLowerCase().includes(selectedCatForDetail.name.toLowerCase())
+              item.text
+                .toLowerCase()
+                .includes(selectedCatForDetail.name.toLowerCase())
             )
             .map((item, idx) => ({
               id: `${item.id}-${idx}`,

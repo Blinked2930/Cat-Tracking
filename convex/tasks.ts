@@ -48,7 +48,7 @@ export const getByCat = query({
   handler: async (ctx: QueryCtx, args: { catId: Id<"cats"> }) => {
     return await ctx.db
       .query("tasks")
-      .withIndex("by_cat", (q: any) => q.eq("catId", args.catId))
+      .withIndex("by_cat", (q) => q.eq("catId", args.catId))
       .collect();
   },
 });
@@ -84,7 +84,7 @@ export const logTask = mutation({
     // Find the user record
     const user = await ctx.db
       .query("users")
-      .withIndex("by_clerk_id", (q: any) => q.eq("clerkId", clerkId))
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", clerkId))
       .unique();
 
     if (!user) {
@@ -129,14 +129,16 @@ export const getDailyLogs = query({
   ) => {
     const rawLogs = await ctx.db
       .query("taskLogs")
-      .withIndex("by_cat_and_date", (q: any) =>
+      .withIndex("by_cat_and_date", (q) =>
         q.eq("catId", args.catId).eq("dateString", args.dateString)
       )
       .collect();
 
-    // Enrich logs with user details and task title
+    // Enrich logs with user details and task title.
+    // Note: log.userId is Id<"users"> and log.taskId is Id<"tasks">, so
+    // ctx.db.get() returns the correct narrowed type — no `any` needed.
     const enrichedLogs = await Promise.all(
-      rawLogs.map(async (log: any) => {
+      rawLogs.map(async (log) => {
         const user = await ctx.db.get(log.userId);
         const task = await ctx.db.get(log.taskId);
         return {
@@ -164,24 +166,35 @@ export const getRecentHouseholdActivity = query({
     // Find all cats in this household
     const cats = await ctx.db
       .query("cats")
-      .withIndex("by_household", (q: any) => q.eq("householdId", args.householdId!))
+      .withIndex("by_household", (q) =>
+        q.eq("householdId", args.householdId!)
+      )
       .collect();
 
     if (cats.length === 0) return [];
 
-    const catMap = new Map(cats.map((c: any) => [c._id.toString(), c.name]));
-    const catIds = cats.map((c: any) => c._id);
+    const catMap = new Map(cats.map((c) => [c._id.toString(), c.name]));
 
-    // Fetch recent logs
-    const allLogs = await ctx.db.query("taskLogs").order("desc").take(25);
-
-    const householdLogs = allLogs.filter((log: any) =>
-      catIds.some((id: any) => id.toString() === log.catId.toString())
+    // Pull recent logs per cat (up to 25 across the household) instead of
+    // scanning the global taskLogs table.
+    const perCatLogs = await Promise.all(
+      cats.map((cat) =>
+        ctx.db
+          .query("taskLogs")
+          .withIndex("by_cat_and_date", (q) => q.eq("catId", cat._id))
+          .order("desc")
+          .take(25)
+      )
     );
+
+    const householdLogs = perCatLogs
+      .flat()
+      .sort((a, b) => b.completedAt - a.completedAt)
+      .slice(0, 25);
 
     // Enrich with user and task info
     const enriched = await Promise.all(
-      householdLogs.map(async (log: any) => {
+      householdLogs.map(async (log) => {
         const user = await ctx.db.get(log.userId);
         const task = await ctx.db.get(log.taskId);
         return {
@@ -220,27 +233,29 @@ export const getDashboardData = query({
     // 1. Fetch cats for this household
     const cats = await ctx.db
       .query("cats")
-      .withIndex("by_household", (q: any) => q.eq("householdId", args.householdId!))
+      .withIndex("by_household", (q) =>
+        q.eq("householdId", args.householdId!)
+      )
       .collect();
 
     // 2. For each cat, fetch tasks and today's logs
     const catsData = await Promise.all(
-      cats.map(async (cat: any) => {
+      cats.map(async (cat) => {
         const tasks = await ctx.db
           .query("tasks")
-          .withIndex("by_cat", (q: any) => q.eq("catId", cat._id))
+          .withIndex("by_cat", (q) => q.eq("catId", cat._id))
           .collect();
 
         const rawLogs = await ctx.db
           .query("taskLogs")
-          .withIndex("by_cat_and_date", (q: any) =>
+          .withIndex("by_cat_and_date", (q) =>
             q.eq("catId", cat._id).eq("dateString", args.dateString)
           )
           .collect();
 
         // Enrich logs with user names
         const enrichedLogs = await Promise.all(
-          rawLogs.map(async (log: any) => {
+          rawLogs.map(async (log) => {
             const user = await ctx.db.get(log.userId);
             return {
               ...log,
@@ -251,7 +266,7 @@ export const getDashboardData = query({
 
         // Calculate total required chore count
         const totalFrequency = tasks.reduce(
-          (acc: number, t: any) => acc + Math.max(1, t.frequency || 1),
+          (acc, t) => acc + Math.max(1, t.frequency || 1),
           0
         );
 
@@ -265,9 +280,9 @@ export const getDashboardData = query({
             : 0;
 
         // Map task items with completion status
-        const tasksWithStatus = tasks.map((task: any) => {
+        const tasksWithStatus = tasks.map((task) => {
           const taskLogs = enrichedLogs.filter(
-            (l: any) => l.taskId.toString() === task._id.toString()
+            (l) => l.taskId.toString() === task._id.toString()
           );
           const isDone = taskLogs.length >= (task.frequency || 1);
           const lastLog = taskLogs[taskLogs.length - 1];
@@ -299,4 +314,3 @@ export const getDashboardData = query({
     };
   },
 });
-

@@ -15,7 +15,7 @@ import {
 export interface CatDetailTask {
   _id: string;
   title: string;
-  type: string; // "checkbox" | "counter"
+  type: string;
   frequency: number;
   config?: any;
   isDone?: boolean;
@@ -54,7 +54,6 @@ export default function CatDetailModal({
   onToggleTask,
   simulatedLogs = [],
 }: CatDetailModalProps) {
-  // Safe Convex Query for live task logs
   let liveLogs: any = null;
   let logTaskMutation: any = null;
   let unlogTaskMutation: any = null;
@@ -71,7 +70,6 @@ export default function CatDetailModal({
     // Dev fallback
   }
 
-  // Format activity timeline logs (Convex or simulated)
   const timelineLogs = useMemo(() => {
     if (liveLogs && liveLogs.length > 0) {
       return liveLogs.map((log: any) => {
@@ -95,7 +93,6 @@ export default function CatDetailModal({
   const pct = Math.max(0, Math.min(100, Math.round(cat.completionPercentage)));
 
   const handleTaskClick = async (task: CatDetailTask) => {
-    // Live Convex Mutation
     if (logTaskMutation && unlogTaskMutation && !cat._id.startsWith("cat-")) {
       try {
         if (task.isDone && task.logs && task.logs.length > 0) {
@@ -115,7 +112,6 @@ export default function CatDetailModal({
       return;
     }
 
-    // Local Callback
     if (onToggleTask) {
       onToggleTask(cat._id, task);
     }
@@ -123,31 +119,27 @@ export default function CatDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs overflow-y-auto">
-      {/* Modal Container */}
-      <div className="relative w-full max-w-2xl bg-[#D9D8D3] border-4 border-black shadow-[8px_8px_0px_0px_#0d0d0d] p-6 my-6">
-        {/* Header */}
+      <div className="relative w-full max-w-2xl bg-paper border-4 border-black shadow-[8px_8px_0px_0px_var(--ink)] p-6 my-6">
         <div className="flex items-center justify-between border-b-3 border-black pb-3 mb-5">
           <div className="flex items-center gap-3">
             <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black">
               {cat.name}
             </h2>
-            <span className="font-mono text-xs font-black bg-black text-[#3FD6CA] px-2 py-0.5 border border-black">
+            <span className="font-mono text-xs font-black bg-ink text-highlight px-2 py-0.5 border border-black">
               {pct}%
             </span>
           </div>
 
           <button
             onClick={onClose}
-            className="w-8 h-8 bg-black text-[#D9D8D3] font-mono font-bold flex items-center justify-center hover:bg-[#A01AB1] transition-colors border-2 border-black"
+            className="w-8 h-8 bg-ink text-paper font-mono font-bold flex items-center justify-center hover:bg-accent transition-colors border-2 border-black"
           >
             ✕
           </button>
         </div>
 
-        {/* Top Grid: Silhouette + Tasks */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-6">
-          {/* Left: Mini Silhouette */}
-          <div className="md:col-span-5 bg-[#E6E5E1] border-2 border-black p-4 flex flex-col items-center justify-center">
+          <div className="md:col-span-5 bg-paper-card border-2 border-black p-4 flex flex-col items-center justify-center">
             <div className="w-full max-w-[170px]">
               <JaggedCatSilhouette
                 catName={cat.name}
@@ -159,7 +151,6 @@ export default function CatDetailModal({
             </div>
           </div>
 
-          {/* Right: Tasks List */}
           <div className="md:col-span-7 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between border-b border-black/20 pb-1.5 mb-2.5 font-mono text-xs">
@@ -173,14 +164,14 @@ export default function CatDetailModal({
                     key={task._id}
                     onClick={() => handleTaskClick(task)}
                     className={`cursor-pointer border-2 border-black p-2.5 transition-all select-none ${task.isDone
-                        ? "bg-[#D9D8D3] text-[#777]"
-                        : "bg-white text-black hover:border-black shadow-[2px_2px_0_0_#000]"
+                        ? "bg-paper text-ink-muted"
+                        : "bg-white text-black hover:border-black shadow-[2px_2px_0_0_var(--ink)]"
                       }`}
                   >
                     <div className="flex items-center justify-between gap-2.5">
                       <div className="flex items-center gap-2.5">
                         <div
-                          className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-xs transition-colors shrink-0 ${task.isDone ? "bg-black text-[#3FD6CA]" : "bg-white"
+                          className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-xs transition-colors shrink-0 ${task.isDone ? "bg-ink text-highlight" : "bg-white"
                             }`}
                         >
                           {task.type === "counter" ? (
@@ -201,7 +192,7 @@ export default function CatDetailModal({
                           </p>
 
                           {task.lastLoggedBy && (
-                            <p className="text-[10px] font-mono font-bold text-[#A01AB1]">
+                            <p className="text-[10px] font-mono font-bold text-accent">
                               {task.lastLoggedBy} • {task.lastLoggedAt}
                             </p>
                           )}
@@ -209,10 +200,9 @@ export default function CatDetailModal({
                       </div>
                     </div>
 
-                    {/* Clean Medication Instruction Pill if configured */}
                     {task.config && (
                       <div className="mt-1.5 pt-1.5 border-t border-dashed border-black/20 font-mono text-[10px] text-zinc-600">
-                        <span className="font-bold text-[#A01AB1]">RX: </span>
+                        <span className="font-bold text-accent">RX: </span>
                         {typeof task.config === "string"
                           ? task.config
                           : JSON.stringify(task.config)}
@@ -225,11 +215,10 @@ export default function CatDetailModal({
           </div>
         </div>
 
-        {/* Activity Feed for this Cat */}
-        <div className="bg-[#E6E5E1] border-2 border-black p-4">
+        <div className="bg-paper-card border-2 border-black p-4">
           <div className="flex items-center justify-between border-b border-black/20 pb-1.5 mb-2.5 font-mono text-xs">
             <span className="font-bold uppercase text-black flex items-center gap-1.5">
-              <Clock className="w-3 h-3 text-[#A01AB1]" />
+              <Clock className="w-3 h-3 text-accent" />
               <span>ACTIVITY TODAY</span>
             </span>
             <span className="text-[10px] text-zinc-400 uppercase">REAL-TIME</span>

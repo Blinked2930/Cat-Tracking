@@ -3,7 +3,7 @@ import React from "react";
 export function MaskingTape({ className = "", text }: { className?: string; text?: string }) {
   return (
     <div
-      className={`inline-block bg-[#3FD6CA]/90 text-black font-mono text-xs font-bold px-3 py-1 border-y-2 border-black/30 shadow-sm transform -rotate-1 select-none backdrop-blur-xs ${className}`}
+      className={`inline-block bg-highlight/90 text-black font-mono text-xs font-bold px-3 py-1 border-y-2 border-black/30 shadow-sm transform -rotate-1 select-none backdrop-blur-xs ${className}`}
       style={{
         boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
         clipPath: "polygon(2% 0%, 98% 0%, 100% 100%, 0% 100%)",
@@ -34,15 +34,15 @@ export function StampBadge({
   className?: string;
 }) {
   const bgStyles = {
-    pink: "bg-[#A01AB1] text-white border-black",
-    yellow: "bg-[#3FD6CA] text-black border-black",
-    black: "bg-[#0d0d0d] text-[#A7A6A2] border-black",
+    pink: "bg-accent text-white border-black",
+    yellow: "bg-highlight text-black border-black",
+    black: "bg-ink text-paper border-black",
     cyan: "bg-[#00f0ff] text-black border-black",
   };
 
   return (
     <div
-      className={`inline-block uppercase font-mono font-black text-xs px-2.5 py-1 border-[3px] shadow-[3px_3px_0px_0px_#0d0d0d] tracking-wider ${bgStyles[color]} ${rotation} ${className}`}
+      className={`inline-block uppercase font-mono font-black text-xs px-2.5 py-1 border-[3px] shadow-[3px_3px_0px_0px_var(--ink)] tracking-wider ${bgStyles[color]} ${rotation} ${className}`}
     >
       {text}
     </div>

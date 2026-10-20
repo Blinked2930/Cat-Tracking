@@ -39,7 +39,6 @@ export default function HouseholdSetupFlow({
   inviteCode: string;
   onComplete?: (catsData: any[]) => void;
 }) {
-  // -------- Hooks at the top, unconditionally --------
   const [cats, setCats] = useState<CatFormItem[]>([
     {
       id: "cat-setup-1",
@@ -76,7 +75,6 @@ export default function HouseholdSetupFlow({
   const generateUploadUrlMutation = useMutation(api.cats.generateUploadUrl);
   const saveHouseholdSetupMutation = useMutation(api.cats.saveHouseholdSetup);
 
-  // -------- Handlers --------
   const handleAddCat = () => {
     setCats([
       ...cats,
@@ -282,7 +280,6 @@ export default function HouseholdSetupFlow({
     }
   };
 
-  // -------- Render --------
   return (
     <div className="w-full max-w-3xl mx-auto">
       <div className="border-b-3 border-black pb-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -290,12 +287,12 @@ export default function HouseholdSetupFlow({
           <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black">
             ADD HOUSEHOLD CATS
           </h2>
-          <p className="text-xs font-mono text-[#555] mt-1">
+          <p className="text-xs font-mono text-ink-muted mt-1">
             Register your cats and their daily care routines.
           </p>
         </div>
 
-        <div className="text-xs font-mono font-bold text-[#555]">
+        <div className="text-xs font-mono font-bold text-ink-muted">
           HOUSEHOLD:{" "}
           <span className="text-black font-mono font-bold">{householdName}</span>
           {" • "}
@@ -306,8 +303,8 @@ export default function HouseholdSetupFlow({
       {statusMessage && (
         <div
           className={`mb-5 p-3 border-2 border-black text-xs font-mono font-bold flex items-center justify-between ${statusMessage.type === "error"
-              ? "bg-[#A01AB1] text-white"
-              : "bg-[#3FD6CA] text-black"
+              ? "bg-accent text-white"
+              : "bg-highlight text-black"
             }`}
         >
           <span>{statusMessage.text}</span>
@@ -319,7 +316,7 @@ export default function HouseholdSetupFlow({
         {cats.map((cat, catIdx) => (
           <div
             key={cat.id}
-            className="bg-[#B5B4B0] border-3 border-black p-5 shadow-[4px_4px_0px_0px_#0d0d0d] space-y-4"
+            className="bg-paper-card border-3 border-black p-5 shadow-[4px_4px_0px_0px_var(--ink)] space-y-4"
           >
             <div className="flex items-center justify-between border-b-2 border-black/20 pb-3">
               <span className="font-mono font-black text-base uppercase text-black">
@@ -349,7 +346,7 @@ export default function HouseholdSetupFlow({
                   onChange={(e) => handleUpdateCatName(cat.id, e.target.value)}
                   placeholder="e.g. Iggy Pop, Dexter"
                   required
-                  className="w-full bg-white border-2 border-black p-2.5 font-mono font-bold text-sm text-black uppercase focus:outline-none focus:border-[#A01AB1]"
+                  className="w-full bg-white border-2 border-black p-2.5 font-mono font-bold text-sm text-black uppercase focus:outline-none focus:border-accent"
                 />
               </div>
 
@@ -380,7 +377,7 @@ export default function HouseholdSetupFlow({
                       </button>
                     </div>
                   ) : (
-                    <label className="cursor-pointer text-xs font-mono font-bold text-[#555] hover:text-black flex items-center gap-1">
+                    <label className="cursor-pointer text-xs font-mono font-bold text-ink-muted hover:text-black flex items-center gap-1">
                       <Upload className="w-3.5 h-3.5" />
                       <span>Choose File</span>
                       <input
@@ -407,7 +404,7 @@ export default function HouseholdSetupFlow({
                 <button
                   type="button"
                   onClick={() => handleAddTask(cat.id)}
-                  className="text-xs font-mono font-bold text-black hover:text-[#A01AB1] flex items-center gap-1"
+                  className="text-xs font-mono font-bold text-black hover:text-accent flex items-center gap-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add Chore</span>
@@ -431,7 +428,7 @@ export default function HouseholdSetupFlow({
                         }
                         placeholder="Chore title (e.g. Kibble, Insulin)"
                         required
-                        className="w-full sm:flex-1 bg-[#A7A6A2] border border-black p-1.5 font-mono text-xs font-bold uppercase focus:outline-none"
+                        className="w-full sm:flex-1 bg-paper border border-black p-1.5 font-mono text-xs font-bold uppercase focus:outline-none"
                       />
 
                       <div className="flex items-center gap-2 self-end sm:self-auto">
@@ -444,7 +441,7 @@ export default function HouseholdSetupFlow({
                               })
                             }
                             className={`px-2 py-0.5 font-bold ${task.type === "checkbox"
-                                ? "bg-black text-white"
+                                ? "bg-ink text-white"
                                 : "bg-white text-black"
                               }`}
                           >
@@ -458,7 +455,7 @@ export default function HouseholdSetupFlow({
                               })
                             }
                             className={`px-2 py-0.5 font-bold border-l border-black ${task.type === "counter"
-                                ? "bg-black text-[#3FD6CA]"
+                                ? "bg-ink text-highlight"
                                 : "bg-white text-black"
                               }`}
                           >
@@ -498,7 +495,7 @@ export default function HouseholdSetupFlow({
                             isConfigOpen: !task.isConfigOpen,
                           })
                         }
-                        className="text-[10px] font-mono text-zinc-500 hover:text-black font-bold flex items-center gap-1"
+                        className="text-[10px] font-mono text-ink-muted hover:text-black font-bold flex items-center gap-1"
                       >
                         <Code className="w-2.5 h-2.5" />
                         <span>
@@ -518,7 +515,7 @@ export default function HouseholdSetupFlow({
                           }
                           placeholder='{"dosage": "2 units", "notes": "After eating"}'
                           rows={2}
-                          className="w-full mt-1.5 bg-[#A7A6A2] border border-black p-2 font-mono text-xs focus:outline-none"
+                          className="w-full mt-1.5 bg-paper border border-black p-2 font-mono text-xs focus:outline-none"
                         />
                       )}
                     </div>
@@ -542,7 +539,7 @@ export default function HouseholdSetupFlow({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="punk-button bg-[#A01AB1] text-white py-2.5 px-6 text-xs font-bold flex items-center gap-1.5 hover:bg-[#84108F]"
+            className="punk-button bg-accent text-white py-2.5 px-6 text-xs font-bold flex items-center gap-1.5 hover:bg-accent-hover"
           >
             <span>
               {isSubmitting ? "Saving..." : "Save & Open Dashboard ➔"}

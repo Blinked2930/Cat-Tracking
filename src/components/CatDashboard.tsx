@@ -17,7 +17,7 @@ import {
 interface TaskItem {
   _id: string;
   title: string;
-  type: string; // "checkbox" | "counter"
+  type: string;
   frequency: number;
   config?: any;
   isDone?: boolean;
@@ -302,7 +302,6 @@ export default function CatDashboard({
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6">
-      {/* Clean Household Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b-2 border-black/20">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black">
@@ -310,10 +309,10 @@ export default function CatDashboard({
           </h1>
           <button
             onClick={copyCode}
-            className="text-xs font-mono font-bold text-[#555] hover:text-black flex items-center gap-1.5 mt-0.5"
+            className="text-xs font-mono font-bold text-ink-muted hover:text-black flex items-center gap-1.5 mt-0.5"
           >
             <span>CODE:</span>
-            <span className="bg-black text-[#3FD6CA] px-1.5 py-0.5 border border-black font-mono">
+            <span className="bg-ink text-highlight px-1.5 py-0.5 border border-black font-mono">
               {inviteCode}
             </span>
             <span className="text-[10px] text-zinc-500">
@@ -325,7 +324,7 @@ export default function CatDashboard({
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsAddCatOpen(true)}
-            className="punk-button bg-[#3FD6CA] text-black px-3.5 py-1.5 text-xs font-black flex items-center gap-1 hover:bg-[#63E0D5]"
+            className="punk-button bg-highlight text-black px-3.5 py-1.5 text-xs font-black flex items-center gap-1 hover:bg-highlight-hover"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>ADD CAT</span>
@@ -333,7 +332,7 @@ export default function CatDashboard({
           {onLeaveHousehold && (
             <button
               onClick={onLeaveHousehold}
-              className="text-xs font-mono font-bold text-[#777] hover:text-red-600 px-2 py-1"
+              className="text-xs font-mono font-bold text-ink-muted hover:text-red-600 px-2 py-1"
             >
               Leave
             </button>
@@ -341,7 +340,6 @@ export default function CatDashboard({
         </div>
       </div>
 
-      {/* Vertically split screen: one block per cat */}
       <div
         className={`grid gap-6 ${activeCats.length === 1
             ? "grid-cols-1 max-w-xl mx-auto"
@@ -353,20 +351,20 @@ export default function CatDashboard({
         {activeCats.map((cat) => (
           <div
             key={cat._id}
-            className="bg-[#B5B4B0] border-3 border-black shadow-[6px_6px_0px_0px_#0d0d0d] flex flex-col justify-between overflow-hidden"
+            className="bg-paper-card border-3 border-black shadow-[6px_6px_0px_0px_var(--ink)] flex flex-col justify-between overflow-hidden"
           >
-            <div className="bg-[#A7A6A2] border-b-3 border-black px-4 py-3 flex items-center justify-between">
+            <div className="bg-paper border-b-3 border-black px-4 py-3 flex items-center justify-between">
               <h2 className="text-xl font-black uppercase tracking-tight text-black">
                 {cat.name}
               </h2>
-              <span className="font-mono text-xs font-black bg-black text-[#3FD6CA] px-2 py-0.5 border border-black">
+              <span className="font-mono text-xs font-black bg-ink text-highlight px-2 py-0.5 border border-black">
                 {cat.completionPercentage}%
               </span>
             </div>
 
             <div
               onClick={() => setSelectedCatForDetail(cat)}
-              className="p-5 bg-[#A7A6A2] border-b-3 border-black flex flex-col items-center justify-center relative cursor-pointer group hover:bg-[#C2C1BD] transition-colors"
+              className="p-5 bg-paper border-b-3 border-black flex flex-col items-center justify-center relative cursor-pointer group hover:bg-paper-hover transition-colors"
               title="Click to view details and activity log"
             >
               <JaggedCatSilhouette
@@ -377,7 +375,7 @@ export default function CatDashboard({
                 photoUrl={cat.photoUrl}
               />
 
-              <div className="mt-2 text-[10px] font-mono font-bold text-[#777] group-hover:text-black flex items-center gap-1 transition-colors">
+              <div className="mt-2 text-[10px] font-mono font-bold text-ink-muted group-hover:text-black flex items-center gap-1 transition-colors">
                 <span>tap silhouette for profile</span>
                 <ExternalLink className="w-2.5 h-2.5" />
               </div>
@@ -390,13 +388,13 @@ export default function CatDashboard({
                     key={task._id}
                     onClick={() => handleToggleTask(cat._id, task)}
                     className={`cursor-pointer border-2 border-black p-2.5 flex items-center justify-between transition-all select-none ${task.isDone
-                        ? "bg-[#A7A6A2] text-[#777]"
-                        : "bg-white text-black hover:border-black shadow-[2px_2px_0_0_#000]"
+                        ? "bg-paper text-ink-muted"
+                        : "bg-white text-black hover:border-black shadow-[2px_2px_0_0_var(--ink)]"
                       }`}
                   >
                     <div className="flex items-center gap-2.5">
                       <div
-                        className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-xs transition-colors shrink-0 ${task.isDone ? "bg-black text-[#3FD6CA]" : "bg-white"
+                        className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-xs transition-colors shrink-0 ${task.isDone ? "bg-ink text-highlight" : "bg-white"
                           }`}
                       >
                         {task.type === "counter" ? (
@@ -420,7 +418,7 @@ export default function CatDashboard({
                           {task.title}
                         </p>
                         {task.lastLoggedBy && (
-                          <p className="text-[10px] font-mono text-[#A01AB1] font-bold">
+                          <p className="text-[10px] font-mono text-accent font-bold">
                             {task.lastLoggedBy} • {task.lastLoggedAt}
                           </p>
                         )}
@@ -434,8 +432,7 @@ export default function CatDashboard({
         ))}
       </div>
 
-      {/* Minimal Activity Feed */}
-      <div className="bg-[#B5B4B0] border-3 border-black p-4 shadow-[4px_4px_0_0_#000]">
+      <div className="bg-paper-card border-3 border-black p-4 shadow-[4px_4px_0_0_var(--ink)]">
         <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-black/20 font-mono text-xs">
           <span className="font-bold uppercase text-black flex items-center gap-1.5">
             <Users className="w-3.5 h-3.5" /> TODAY&apos;S LOGS
@@ -456,7 +453,6 @@ export default function CatDashboard({
         </div>
       </div>
 
-      {/* Cat Detail Modal */}
       {selectedCatForDetail && (
         <CatDetailModal
           cat={
@@ -483,7 +479,6 @@ export default function CatDashboard({
         />
       )}
 
-      {/* Cat Setup Modal */}
       <CatSetupModal
         householdId={householdId}
         isOpen={isAddCatOpen}

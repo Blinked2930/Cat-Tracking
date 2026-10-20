@@ -2,19 +2,30 @@
 
 @layer base {
   :root {
-    --paper: #D9D8D3;
-    --paper-muted: #E6E5E1;
-    --paper-dark: #C4C3BE;
+    /* ============================================================
+       PALETTE — change these six lines to retheme the entire app
+       ============================================================ */
+    --paper: #EDECE7;
+    /* main page bg */
+    --paper-card: #F5F4F0;
+    /* card / panel bg */
+    --paper-hover: #FAF9F6;
+    /* hover / lightest step */
+    --paper-muted: #DCDBD5;
+    /* darker panel step */
+    --accent: #A01AB1;
+    /* primary accent (was pink) */
+    --accent-hover: #84108F;
+    /* darker accent for :hover */
+    --highlight: #3FD6CA;
+    /* secondary accent (was yellow) */
+    --highlight-hover: #63E0D5;
+    /* lighter highlight for :hover */
+
+    /* Ink / neutrals — rarely change */
     --ink: #0d0d0d;
     --ink-muted: #3a3a3a;
     --pencil: #666666;
-    --punk-pink: #A01AB1;
-    --punk-pink-dark: #84108F;
-    --punk-yellow: #3FD6CA;
-    --punk-yellow-light: #63E0D5;
-    --punk-green: #00e676;
-    --punk-cyan: #00f0ff;
-    --punk-orange: #ff5500;
   }
 
   body {
@@ -32,64 +43,65 @@
 }
 
 @theme {
+  /* Expose every palette variable as a Tailwind utility.
+     e.g. --color-accent  →  bg-accent, text-accent, border-accent,
+                              stroke-accent, fill-accent, shadow-accent */
   --color-paper: var(--paper);
+  --color-paper-card: var(--paper-card);
+  --color-paper-hover: var(--paper-hover);
   --color-paper-muted: var(--paper-muted);
-  --color-paper-dark: var(--paper-dark);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-highlight: var(--highlight);
+  --color-highlight-hover: var(--highlight-hover);
   --color-ink: var(--ink);
   --color-ink-muted: var(--ink-muted);
   --color-pencil: var(--pencil);
-  --color-punk-pink: var(--punk-pink);
-  --color-punk-pink-dark: var(--punk-pink-dark);
-  --color-punk-yellow: var(--punk-yellow);
-  --color-punk-yellow-light: var(--punk-yellow-light);
-  --color-punk-green: var(--punk-green);
-  --color-punk-cyan: var(--punk-cyan);
-  --color-punk-orange: var(--punk-orange);
 
   --shadow-hard-sm: 2px 2px 0px 0px #0d0d0d;
   --shadow-hard: 4px 4px 0px 0px #0d0d0d;
   --shadow-hard-lg: 6px 6px 0px 0px #0d0d0d;
   --shadow-hard-xl: 8px 8px 0px 0px #0d0d0d;
-  --shadow-punk-pink: 4px 4px 0px 0px #A01AB1;
-  --shadow-punk-yellow: 4px 4px 0px 0px #3FD6CA;
+  --shadow-accent: 4px 4px 0px 0px var(--accent);
+  --shadow-highlight: 4px 4px 0px 0px var(--highlight);
 }
 
 /* Brutalist punk UI utilities */
 .punk-border {
-  border: 3px solid #0d0d0d;
+  border: 3px solid var(--ink);
 }
 
 .punk-border-thick {
-  border: 4px solid #0d0d0d;
+  border: 4px solid var(--ink);
 }
 
 .punk-border-dashed {
-  border: 3px dashed #0d0d0d;
+  border: 3px dashed var(--ink);
 }
 
 .punk-shadow {
-  box-shadow: 4px 4px 0px 0px #0d0d0d;
+  box-shadow: 4px 4px 0px 0px var(--ink);
 }
 
 .punk-shadow-lg {
-  box-shadow: 6px 6px 0px 0px #0d0d0d;
+  box-shadow: 6px 6px 0px 0px var(--ink);
 }
 
 .punk-shadow-xl {
-  box-shadow: 8px 8px 0px 0px #0d0d0d;
+  box-shadow: 8px 8px 0px 0px var(--ink);
 }
 
-.punk-shadow-pink {
-  box-shadow: 4px 4px 0px 0px #A01AB1;
+.punk-shadow-accent {
+  box-shadow: 4px 4px 0px 0px var(--accent);
 }
 
-.punk-shadow-yellow {
-  box-shadow: 4px 4px 0px 0px #3FD6CA;
+.punk-shadow-highlight {
+  box-shadow: 4px 4px 0px 0px var(--highlight);
 }
 
 .punk-button {
-  border: 3px solid #0d0d0d;
-  box-shadow: 4px 4px 0px 0px #0d0d0d;
+  border: 3px solid var(--ink);
+  box-shadow: 4px 4px 0px 0px var(--ink);
   font-weight: 800;
   text-transform: uppercase;
   transition: all 0.1s ease-in-out;
@@ -97,12 +109,12 @@
 
 .punk-button:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px 0px #0d0d0d;
+  box-shadow: 6px 6px 0px 0px var(--ink);
 }
 
 .punk-button:active {
   transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0px 0px #0d0d0d;
+  box-shadow: 2px 2px 0px 0px var(--ink);
 }
 
 /* Xerox Halftone / Grain Effect */

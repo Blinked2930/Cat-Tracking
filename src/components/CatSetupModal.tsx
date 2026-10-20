@@ -75,7 +75,6 @@ export default function CatSetupModal({
           name: catName.trim(),
         });
 
-        // Add all routines
         for (const routine of routines) {
           await createTaskMutation({
             catId,
@@ -93,7 +92,6 @@ export default function CatSetupModal({
           });
         }
       } else {
-        // Dev / local state fallback
         const mockCat = {
           _id: "cat-" + Date.now(),
           name: catName.trim(),
@@ -119,14 +117,13 @@ export default function CatSetupModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs overflow-y-auto">
-      <div className="relative w-full max-w-lg bg-[#A7A6A2] border-4 border-black shadow-[10px_10px_0px_0px_#0d0d0d] p-6 my-8">
-        {/* Top Zine staples */}
+      <div className="relative w-full max-w-lg bg-paper border-4 border-black shadow-[10px_10px_0px_0px_var(--ink)] p-6 my-8">
         <div className="flex justify-between items-center mb-3">
           <ZineStaple />
           <MaskingTape text="INTAKE FORM // FELINE UNIT" className="-rotate-1" />
           <button
             onClick={onClose}
-            className="w-7 h-7 bg-black text-[#A7A6A2] font-mono font-bold flex items-center justify-center hover:bg-[#A01AB1] transition-colors border-2 border-black"
+            className="w-7 h-7 bg-ink text-paper font-mono font-bold flex items-center justify-center hover:bg-accent transition-colors border-2 border-black"
           >
             ✕
           </button>
@@ -135,7 +132,7 @@ export default function CatSetupModal({
         <div className="border-b-3 border-black pb-3 mb-4">
           <div className="flex items-center gap-2 mb-1">
             <StampBadge text="NEW STRAY ENTRY" color="pink" />
-            <span className="text-[10px] font-mono font-bold uppercase text-[#555]">
+            <span className="text-[10px] font-mono font-bold uppercase text-ink-muted">
               SQUAT ROSTER ADDITION
             </span>
           </div>
@@ -145,7 +142,6 @@ export default function CatSetupModal({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Cat Name */}
           <div>
             <label className="block text-xs font-mono font-black uppercase text-black mb-1">
               CAT NAME // STREET MONIKER:
@@ -156,27 +152,25 @@ export default function CatSetupModal({
               onChange={(e) => setCatName(e.target.value)}
               placeholder="e.g. Iggy Pop, Sid, Lucifer"
               required
-              className="w-full bg-white border-3 border-black p-3 font-mono font-bold text-sm text-black uppercase focus:outline-none focus:bg-[#D9F5F1] focus:border-[#A01AB1] shadow-[2px_2px_0_0_#000]"
+              className="w-full bg-white border-3 border-black p-3 font-mono font-bold text-sm text-black uppercase focus:outline-none focus:bg-[#D9F5F1] focus:border-accent shadow-[2px_2px_0_0_var(--ink)]"
             />
           </div>
 
-          {/* Daily Routines Config */}
           <div>
             <label className="block text-xs font-mono font-black uppercase text-black mb-1 flex items-center justify-between">
               <span>DAILY ROUTINES &amp; MEDS ({routines.length}):</span>
-              <span className="text-[10px] text-[#A01AB1]">RESETS AT MIDNIGHT</span>
+              <span className="text-[10px] text-accent">RESETS AT MIDNIGHT</span>
             </label>
 
-            {/* List of routines */}
             <div className="space-y-2 mb-3 max-h-48 overflow-y-auto pr-1">
               {routines.map((r, index) => (
                 <div
                   key={index}
-                  className="bg-white border-2 border-black p-2.5 flex items-center justify-between text-xs font-mono shadow-[2px_2px_0_0_#000]"
+                  className="bg-white border-2 border-black p-2.5 flex items-center justify-between text-xs font-mono shadow-[2px_2px_0_0_var(--ink)]"
                 >
                   <div>
                     <span className="font-bold text-black uppercase">{r.title}</span>
-                    <div className="text-[10px] text-[#666] flex gap-2">
+                    <div className="text-[10px] text-ink-muted flex gap-2">
                       <span className="uppercase">TYPE: {r.type}</span>
                       <span>•</span>
                       <span>FREQ: {r.frequency}x / DAY</span>
@@ -193,8 +187,7 @@ export default function CatSetupModal({
               ))}
             </div>
 
-            {/* Add Routine Subsection */}
-            <div className="bg-[#B5B4B0] border-2 border-dashed border-black p-3 space-y-2">
+            <div className="bg-paper-card border-2 border-dashed border-black p-3 space-y-2">
               <span className="text-[10px] font-mono font-bold uppercase text-black block">
                 + ADD CUSTOM CHORE / MEDICATION:
               </span>
@@ -217,7 +210,7 @@ export default function CatSetupModal({
                 <button
                   type="button"
                   onClick={addRoutine}
-                  className="punk-button bg-[#3FD6CA] text-black px-3 py-1 text-xs font-black"
+                  className="punk-button bg-highlight text-black px-3 py-1 text-xs font-black"
                 >
                   ADD
                 </button>
@@ -225,7 +218,6 @@ export default function CatSetupModal({
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="pt-2 flex gap-3">
             <button
               type="button"
@@ -237,7 +229,7 @@ export default function CatSetupModal({
             <button
               type="submit"
               disabled={isSubmitting || !catName.trim()}
-              className="punk-button bg-[#0d0d0d] text-[#A7A6A2] py-3 px-4 text-xs font-black flex-2 hover:bg-[#A01AB1] hover:text-white"
+              className="punk-button bg-ink text-paper py-3 px-4 text-xs font-black flex-2 hover:bg-accent hover:text-white"
             >
               {isSubmitting ? "STAMPING ENTRY..." : "CREATE FELINE PROFILE ➔"}
             </button>

@@ -19,7 +19,6 @@ export default function OnboardingFlow({
     inviteCode: string;
   }) => void;
 }) {
-  // -------- All hooks at the top, unconditionally --------
   const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
 
   const [activeTab, setActiveTab] = useState<"create" | "join">("create");
@@ -45,7 +44,6 @@ export default function OnboardingFlow({
     effectiveUserId ? { clerkId: effectiveUserId } : "skip"
   );
 
-  // -------- Effects --------
   useEffect(() => {
     if (effectiveUserId && syncUserMutation) {
       syncUserMutation({
@@ -60,7 +58,6 @@ export default function OnboardingFlow({
 
   const currentHousehold = liveCurrentUserData?.household || null;
 
-  // -------- Handlers --------
   const handleCreateHousehold = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!squatName.trim()) {
@@ -139,27 +136,26 @@ export default function OnboardingFlow({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // -------- Render --------
   if (!isClerkLoaded) {
     return (
-      <div className="p-6 font-mono text-sm text-[#555]">Loading…</div>
+      <div className="p-6 font-mono text-sm text-ink-muted">Loading…</div>
     );
   }
 
   return (
-    <div className="w-full bg-[#D9D8D3] border-4 border-[#0d0d0d] shadow-[6px_6px_0px_0px_#0d0d0d] p-6 sm:p-8">
+    <div className="w-full bg-paper border-4 border-ink shadow-[6px_6px_0px_0px_var(--ink)] p-6 sm:p-8">
       <div className="border-b-3 border-black pb-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black">
             HOUSEHOLD SETUP
           </h2>
-          <p className="text-xs font-mono text-[#555] mt-1">
+          <p className="text-xs font-mono text-ink-muted mt-1">
             Create a shared household or join an existing one with an invite
             code.
           </p>
         </div>
 
-        <div className="text-xs font-mono font-bold text-[#555] flex items-center gap-2">
+        <div className="text-xs font-mono font-bold text-ink-muted flex items-center gap-2">
           <span>
             USER: <strong className="text-black">{effectiveUserName}</strong>
           </span>
@@ -167,7 +163,7 @@ export default function OnboardingFlow({
             <UserButton />
           ) : (
             <SignInButton mode="modal">
-              <button className="punk-button bg-[#3FD6CA] text-black px-3 py-1 text-xs font-bold border-2 border-black shadow-[2px_2px_0_0_#A01AB1]">
+              <button className="punk-button bg-highlight text-black px-3 py-1 text-xs font-bold border-2 border-black shadow-[2px_2px_0_0_var(--accent)]">
                 SIGN IN
               </button>
             </SignInButton>
@@ -178,8 +174,8 @@ export default function OnboardingFlow({
       {statusMessage && (
         <div
           className={`mb-5 p-3 border-2 border-black text-xs font-mono font-bold flex items-center justify-between ${statusMessage.type === "error"
-            ? "bg-[#A01AB1] text-white"
-            : "bg-[#3FD6CA] text-black"
+              ? "bg-accent text-white"
+              : "bg-highlight text-black"
             }`}
         >
           <span>{statusMessage.text}</span>
@@ -189,17 +185,17 @@ export default function OnboardingFlow({
 
       {currentHousehold ? (
         <div className="space-y-4">
-          <div className="bg-white border-3 border-black p-5 shadow-[4px_4px_0_0_#000]">
-            <span className="text-[10px] font-mono font-bold uppercase text-[#777]">
+          <div className="bg-white border-3 border-black p-5 shadow-[4px_4px_0_0_var(--ink)]">
+            <span className="text-[10px] font-mono font-bold uppercase text-ink-muted">
               ACTIVE HOUSEHOLD
             </span>
             <h3 className="text-2xl font-black uppercase text-black mt-0.5 mb-3">
               {currentHousehold.name}
             </h3>
 
-            <div className="bg-[#D9D8D3] border-2 border-black p-3 flex items-center justify-between gap-3 mb-4">
+            <div className="bg-paper border-2 border-black p-3 flex items-center justify-between gap-3 mb-4">
               <div>
-                <span className="text-[10px] font-mono text-[#666] uppercase block">
+                <span className="text-[10px] font-mono text-ink-muted uppercase block">
                   ROOMMATE INVITE CODE
                 </span>
                 <span className="font-mono font-black text-2xl tracking-wider text-black">
@@ -208,7 +204,7 @@ export default function OnboardingFlow({
               </div>
               <button
                 onClick={() => copyToClipboard(currentHousehold.inviteCode)}
-                className="punk-button bg-[#3FD6CA] text-black px-3 py-1.5 text-xs font-bold flex items-center gap-1.5"
+                className="punk-button bg-highlight text-black px-3 py-1.5 text-xs font-bold flex items-center gap-1.5"
               >
                 {copied ? (
                   <Check className="w-3.5 h-3.5" />
@@ -230,7 +226,7 @@ export default function OnboardingFlow({
                   });
                 }
               }}
-              className="punk-button w-full bg-black text-[#D9D8D3] py-3 text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#A01AB1]"
+              className="punk-button w-full bg-ink text-paper py-3 text-xs font-bold flex items-center justify-center gap-2 hover:bg-accent"
             >
               <span>OPEN DASHBOARD</span>
               <ArrowRight className="w-4 h-4" />
@@ -247,8 +243,8 @@ export default function OnboardingFlow({
                 setStatusMessage(null);
               }}
               className={`punk-button py-2.5 px-3 text-xs font-bold transition-all ${activeTab === "create"
-                ? "bg-black text-[#D9D8D3] shadow-[3px_3px_0px_0px_#A01AB1]"
-                : "bg-white text-black hover:bg-zinc-100"
+                  ? "bg-ink text-paper shadow-[3px_3px_0px_0px_var(--accent)]"
+                  : "bg-white text-black hover:bg-zinc-100"
                 }`}
             >
               CREATE HOUSEHOLD
@@ -261,8 +257,8 @@ export default function OnboardingFlow({
                 setStatusMessage(null);
               }}
               className={`punk-button py-2.5 px-3 text-xs font-bold transition-all ${activeTab === "join"
-                ? "bg-black text-[#D9D8D3] shadow-[3px_3px_0px_0px_#3FD6CA]"
-                : "bg-white text-black hover:bg-zinc-100"
+                  ? "bg-ink text-paper shadow-[3px_3px_0px_0px_var(--highlight)]"
+                  : "bg-white text-black hover:bg-zinc-100"
                 }`}
             >
               JOIN WITH CODE
@@ -281,14 +277,14 @@ export default function OnboardingFlow({
                   onChange={(e) => setSquatName(e.target.value)}
                   placeholder="e.g. Apt 4B, The Alley Squat"
                   required
-                  className="w-full bg-white border-3 border-black p-3 font-mono font-bold text-sm text-black focus:outline-none focus:border-[#A01AB1]"
+                  className="w-full bg-white border-3 border-black p-3 font-mono font-bold text-sm text-black focus:outline-none focus:border-accent"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="punk-button w-full bg-[#A01AB1] text-white py-3 px-4 text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#84108F]"
+                className="punk-button w-full bg-accent text-white py-3 px-4 text-xs font-bold flex items-center justify-center gap-2 hover:bg-accent-hover"
               >
                 <span>{isSubmitting ? "CREATING..." : "CREATE HOUSEHOLD ➔"}</span>
               </button>
@@ -306,7 +302,7 @@ export default function OnboardingFlow({
                   onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
                   placeholder="PUNK69"
                   required
-                  className="w-full bg-white border-3 border-black py-3 px-4 text-center font-mono font-bold text-2xl tracking-[0.3em] uppercase text-black focus:outline-none focus:border-[#3FD6CA]"
+                  className="w-full bg-white border-3 border-black py-3 px-4 text-center font-mono font-bold text-2xl tracking-[0.3em] uppercase text-black focus:outline-none focus:border-highlight"
                 />
               </div>
 
@@ -314,8 +310,8 @@ export default function OnboardingFlow({
                 type="submit"
                 disabled={isSubmitting || inviteCode.length !== 6}
                 className={`punk-button w-full py-3 px-4 text-xs font-bold flex items-center justify-center gap-2 ${inviteCode.length === 6
-                  ? "bg-[#3FD6CA] text-black hover:bg-[#63E0D5]"
-                  : "bg-zinc-200 text-zinc-400 cursor-not-allowed"
+                    ? "bg-highlight text-black hover:bg-highlight-hover"
+                    : "bg-zinc-200 text-zinc-400 cursor-not-allowed"
                   }`}
               >
                 <span>{isSubmitting ? "JOINING..." : "JOIN HOUSEHOLD ➔"}</span>

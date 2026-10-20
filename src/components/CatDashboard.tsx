@@ -6,11 +6,8 @@ import { api } from "../../convex/_generated/api";
 import JaggedCatSilhouette from "./JaggedCatSilhouette";
 import CatSetupModal from "./CatSetupModal";
 import CatDetailModal from "./CatDetailModal";
-import {
-  Check,
-  Plus,
-  ExternalLink,
-} from "lucide-react";
+import { formatTime } from "@/lib/formatTime";
+import { Check, Plus, ExternalLink } from "lucide-react";
 
 interface TaskItem {
   _id: string;
@@ -40,31 +37,6 @@ function isRealConvexId(id: string | undefined | null): boolean {
   if (id.startsWith("mock-")) return false;
   if (id === "squat-bedford") return false;
   return id.length >= 20;
-}
-
-/**
- * Converts a Unix-ms timestamp, an ISO string, or a pre-formatted time string
- * into a clean "8:15 AM" display. Falls back to empty string on garbage.
- */
-function formatTime(value: number | string | undefined | null): string {
-  if (value === undefined || value === null) return "";
-  if (typeof value === "string") {
-    // If it already looks like a formatted time (e.g. "8:15 AM"), pass through.
-    if (/^\d{1,2}:\d{2}\s?(AM|PM)?$/i.test(value.trim())) return value;
-    // Otherwise try to parse as a date / ISO string.
-    const parsed = new Date(value);
-    if (isNaN(parsed.getTime())) return "";
-    return parsed.toLocaleTimeString([], {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  }
-  const parsed = new Date(value);
-  if (isNaN(parsed.getTime())) return "";
-  return parsed.toLocaleTimeString([], {
-    hour: "numeric",
-    minute: "2-digit",
-  });
 }
 
 export default function CatDashboard({
@@ -104,7 +76,6 @@ export default function CatDashboard({
     [shouldQueryBackend, dashboardData]
   );
 
-  // No more mock fallback — empty array means no cats in this household yet.
   const activeCats: CatBlockData[] = useMemo(() => {
     if (isLiveBackend && dashboardData?.cats) {
       return dashboardData.cats as CatBlockData[];
@@ -138,12 +109,9 @@ export default function CatDashboard({
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b-2 border-black/20">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black">
-            {householdName}
-          </h1>
-        </div>
-
+        <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black">
+          {householdName}
+        </h1>
         <button
           onClick={() => setIsAddCatOpen(true)}
           className="punk-button bg-highlight text-black px-3.5 py-1.5 text-xs font-black flex items-center gap-1 hover:bg-highlight-hover"
@@ -205,24 +173,34 @@ export default function CatDashboard({
             <div className="p-4 bg-white flex-1 flex flex-col justify-between">
               <div className="space-y-2">
                 {cat.tasks.map((task) => {
+                  const completed = task.completedCount || 0;
+                  const isCounter = task.type === "counter";
+                  const started = isCounter && completed > 0 && !task.isDone;
                   const timeDisplay = formatTime(task.lastLoggedAt);
+
                   return (
                     <div
                       key={task._id}
                       onClick={() => handleToggleTask(cat._id, task)}
-                      className={`cursor-pointer border-2 border-black p-2.5 flex items-center justify-between transition-all select-none ${task.isDone
+                      className={`cursor-pointer border-2 border-black p-2.5 flex items-center justify-between transition-all select-none relative ${task.isDone
                           ? "bg-paper text-ink-muted"
-                          : "bg-white text-black hover:border-black shadow-[2px_2px_0_0_var(--ink)]"
+                          : started
+                            ? "bg-highlight/20 hover:border-black shadow-[2px_2px_0_0_var(--ink)]"
+                            : "bg-white text-black hover:border-black shadow-[2px_2px_0_0_var(--ink)]"
                         }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div
-                          className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-xs transition-colors shrink-0 ${task.isDone ? "bg-ink text-highlight" : "bg-white"
+                          className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-xs transition-colors shrink-0 ${task.isDone
+                              ? "bg-ink text-highlight"
+                              : started
+                                ? "bg-highlight text-black"
+                                : "bg-white"
                             }`}
                         >
-                          {task.type === "counter" ? (
+                          {isCounter ? (
                             <span className="text-[10px]">
-                              {task.completedCount || 0}/{task.frequency}
+                              {completed}/{task.frequency}
                             </span>
                           ) : (
                             task.isDone && (
@@ -248,6 +226,13 @@ export default function CatDashboard({
                           )}
                         </div>
                       </div>
+
+                      {/* "Started" badge for counters not yet complete */}
+                      {started && (
+                        <span className="shrink-0 ml-2 font-mono text-[9px] font-black uppercase bg-highlight text-black border border-black px-1.5 py-0.5">
+                          In progress
+                        </span>
+                      )}
                     </div>
                   );
                 })}

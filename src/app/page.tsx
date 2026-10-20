@@ -7,7 +7,7 @@ import { api } from "../../convex/_generated/api";
 import OnboardingFlow from "@/components/OnboardingFlow";
 import HouseholdSetupFlow from "@/components/HouseholdSetupFlow";
 import CatDashboard from "@/components/CatDashboard";
-import { LayoutDashboard, FileText, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, FileText, Settings, LogOut, AlertTriangle } from "lucide-react";
 
 interface ActiveHousehold {
   id: string;
@@ -25,11 +25,9 @@ export default function Home() {
   const [activeHousehold, setActiveHousehold] =
     useState<ActiveHousehold | null>(null);
   const [isLeaving, setIsLeaving] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [leaveError, setLeaveError] = useState<string | null>(null);
 
-  // Load the user's current household from Convex on mount / sign-in change.
-  // This is what makes refresh work: if the server says you're in a household,
-  // you land straight in the dashboard without clicking anything.
   const currentUserData = useQuery(
     api.users.currentUser,
     clerkUser?.id ? { clerkId: clerkUser.id } : "skip"
@@ -46,10 +44,8 @@ export default function Home() {
         name: household.name,
         inviteCode: household.inviteCode,
       });
-      // Only auto-advance if the user hasn't explicitly navigated to setup.
       setActiveView((v) => (v === "setup" ? "setup" : "dashboard"));
     } else {
-      // No household on the server → force back to onboarding.
       setActiveHousehold(null);
       setActiveView("onboarding");
     }
@@ -59,15 +55,11 @@ export default function Home() {
     if (activeHousehold) setActiveView("dashboard");
   };
 
-  const handleLeaveHousehold = async () => {
+  const confirmLeaveHousehold = async () => {
     if (!clerkUser?.id) {
       setLeaveError("You need to be signed in to leave.");
       return;
     }
-    const confirmed = window.confirm(
-      "Leave this household? You'll lose access until someone re-invites you."
-    );
-    if (!confirmed) return;
 
     setIsLeaving(true);
     setLeaveError(null);
@@ -76,6 +68,7 @@ export default function Home() {
       await leaveHouseholdMutation({ clerkId: clerkUser.id });
       setActiveHousehold(null);
       setActiveView("onboarding");
+      setShowLeaveConfirm(false);
     } catch (err: any) {
       setLeaveError(err?.message || "Could not leave household");
     } finally {
@@ -83,9 +76,6 @@ export default function Home() {
     }
   };
 
-  // Render a spinner while Clerk or the initial currentUser query is loading,
-  // so we don't flash the onboarding screen before we know whether the user
-  // already has a household.
   if (!isClerkLoaded) {
     return (
       <div className="min-h-screen bg-paper text-ink flex items-center justify-center font-mono text-sm">
@@ -169,7 +159,7 @@ export default function Home() {
         )}
 
         {activeView === "setup" && activeHousehold && (
-          <section className="space-y-6">
+          <section className="space-y-8">
             <HouseholdSetupFlow
               householdId={activeHousehold.id}
               householdName={activeHousehold.name}
@@ -179,23 +169,38 @@ export default function Home() {
               }}
             />
 
-            <div className="max-w-3xl mx-auto pt-4 border-t-2 border-black/20">
-              {leaveError && (
-                <div className="mb-3 p-2 border-2 border-black bg-accent text-white text-xs font-mono font-bold">
-                  {leaveError}
+            {/* Danger zone */}
+            <div className="max-w-3xl mx-auto">
+              <div className="border-3 border-black bg-white p-5 shadow-[4px_4px_0_0_var(--ink)]">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-8 h-8 bg-accent text-white flex items-center justify-center border-2 border-black shrink-0">
+                    <AlertTriangle className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-mono font-black uppercase text-black text-sm">
+                      Danger Zone
+                    </h3>
+                    <p className="text-[11px] font-mono text-ink-muted mt-0.5">
+                      Leaving removes you from this household. Cat-care history stays with the crew.
+                    </p>
+                  </div>
                 </div>
-              )}
-              <button
-                onClick={handleLeaveHousehold}
-                disabled={isLeaving}
-                className="w-full sm:w-auto punk-button bg-white text-red-600 py-2.5 px-4 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>{isLeaving ? "Leaving..." : "Leave Household"}</span>
-              </button>
-              <p className="text-[10px] font-mono text-ink-muted mt-2">
-                You&apos;ll be removed from this household. Your cat-care history stays with the crew.
-              </p>
+
+                {leaveError && (
+                  <div className="mb-3 p-2 border-2 border-black bg-accent text-white text-xs font-mono font-bold">
+                    {leaveError}
+                  </div>
+                )}
+
+                <button
+                  onClick={() => setShowLeaveConfirm(true)}
+                  disabled={isLeaving}
+                  className="punk-button bg-white text-accent border-[#A01AB1] py-2 px-4 text-xs font-bold flex items-center gap-1.5 hover:bg-accent hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Leave Household</span>
+                </button>
+              </div>
             </div>
           </section>
         )}
@@ -207,7 +212,6 @@ export default function Home() {
               householdName={activeHousehold.name}
               inviteCode={activeHousehold.inviteCode}
               userName="Emmett"
-              onLeaveHousehold={handleLeaveHousehold}
             />
           </section>
         )}
@@ -227,6 +231,50 @@ export default function Home() {
           STRAYSYNC • REAL-TIME CAT CARE FOR ROOMMATES
         </p>
       </footer>
+
+      {/* Leave confirmation modal */}
+      {showLeaveConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs"
+          onClick={() => !isLeaving && setShowLeaveConfirm(false)}
+        >
+          <div
+            className="relative w-full max-w-md bg-paper border-4 border-black shadow-[8px_8px_0px_0px_var(--ink)] p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-accent text-white flex items-center justify-center border-2 border-black shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <h3 className="text-xl font-black uppercase tracking-tight text-black">
+                Leave Household?
+              </h3>
+            </div>
+
+            <p className="text-xs font-mono text-ink-muted mb-6 leading-relaxed">
+              You&apos;ll lose access to this household until someone re-invites you with the code.
+              Your past cat-care logs stay with the crew.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => setShowLeaveConfirm(false)}
+                disabled={isLeaving}
+                className="punk-button flex-1 bg-white text-black py-2.5 px-4 text-xs font-bold disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLeaveHousehold}
+                disabled={isLeaving}
+                className="punk-button flex-1 bg-accent text-white py-2.5 px-4 text-xs font-bold hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLeaving ? "Leaving..." : "Yes, Leave"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

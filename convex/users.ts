@@ -1,10 +1,6 @@
 import { mutation, query, MutationCtx, QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
 
-/**
- * Sync the authenticated Clerk user to the Convex `users` table.
- * Called when a user logs in / lands on the app.
- */
 export const syncUser = mutation({
   args: {
     clerkId: v.optional(v.string()),
@@ -12,8 +8,7 @@ export const syncUser = mutation({
   },
   handler: async (ctx: MutationCtx, args: { clerkId?: string; name?: string }) => {
     const identity = await ctx.auth.getUserIdentity();
-    
-    // Resolve clerkId from JWT identity or explicit client argument
+
     const clerkId = identity?.subject || args.clerkId;
     if (!clerkId) {
       throw new Error("Cannot sync user: No Clerk ID found in session or args");
@@ -24,16 +19,14 @@ export const syncUser = mutation({
       identity?.name ||
       identity?.nickname ||
       identity?.givenName ||
-      "Anonymous Stray";
+      "Roommate";
 
-    // Check if user already exists
     const existingUser = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q: any) => q.eq("clerkId", clerkId))
       .unique();
 
     if (existingUser) {
-      // Update name if changed
       if (name && existingUser.name !== name) {
         await ctx.db.patch(existingUser._id, { name });
       }
@@ -45,7 +38,6 @@ export const syncUser = mutation({
       };
     }
 
-    // Insert new user
     const newUserId = await ctx.db.insert("users", {
       clerkId,
       name,
@@ -60,9 +52,6 @@ export const syncUser = mutation({
   },
 });
 
-/**
- * Fetch the current authenticated user record and their household (if joined).
- */
 export const currentUser = query({
   args: {
     clerkId: v.optional(v.string()),

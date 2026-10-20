@@ -122,7 +122,7 @@ export default function OnboardingFlow({
       setInviteCode("");
     } catch (err: any) {
       setStatusMessage({
-        text: err.message || "Failed to join crew",
+        text: err.message || "Failed to join household",
         type: "error",
       });
     } finally {
@@ -300,7 +300,7 @@ export default function OnboardingFlow({
                   maxLength={6}
                   value={inviteCode}
                   onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                  placeholder="PUNK69"
+                  placeholder="A1B2C3"
                   required
                   className="w-full bg-white border-3 border-black py-3 px-4 text-center font-mono font-bold text-2xl tracking-[0.3em] uppercase text-black focus:outline-none focus:border-highlight"
                 />

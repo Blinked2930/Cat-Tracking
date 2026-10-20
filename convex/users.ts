@@ -1,10 +1,6 @@
 import { mutation, query, MutationCtx, QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
 
-/**
- * Sync (or re-sync) the authenticated Clerk user to the Convex `users` table.
- * Safe to call on every page load — it's idempotent.
- */
 export const syncUser = mutation({
   args: {
     clerkId: v.optional(v.string()),
@@ -21,7 +17,6 @@ export const syncUser = mutation({
       throw new Error("Cannot sync user: No Clerk ID found");
     }
 
-    // Prefer explicit arg, then JWT claims, then fall back.
     const candidateName =
       args.name ||
       identity?.name ||
@@ -37,16 +32,34 @@ export const syncUser = mutation({
       .unique();
 
     if (existingUser) {
-      // Overwrite "Roommate" fallback if we now have a real name.
-      const shouldUpdateName =
-        cleanName !== "Roommate" && existingUser.name !== cleanName;
-      if (shouldUpdateName) {
-        await ctx.db.patch(existingUser._id, { name: cleanName });
+      // Only upgrade away from the "Roommate" fallback. Never overwrite a
+      // name the user has explicitly set.
+      const shouldUpgradeName =
+        existingUser.name === "Roommate" && cleanName !== "Roommate";
+
+      if (shouldUpgradeName) {
+        const currentSaved = existingUser.savedNames ?? [];
+        const nextSaved = currentSaved.includes(cleanName)
+          ? currentSaved
+          : [...currentSaved, cleanName];
+        await ctx.db.patch(existingUser._id, {
+          name: cleanName,
+          savedNames: nextSaved,
+        });
+        return {
+          _id: existingUser._id,
+          clerkId: existingUser.clerkId,
+          name: cleanName,
+          savedNames: nextSaved,
+          householdId: existingUser.householdId,
+        };
       }
+
       return {
         _id: existingUser._id,
         clerkId: existingUser.clerkId,
-        name: shouldUpdateName ? cleanName : existingUser.name,
+        name: existingUser.name,
+        savedNames: existingUser.savedNames ?? [],
         householdId: existingUser.householdId,
       };
     }
@@ -54,12 +67,14 @@ export const syncUser = mutation({
     const newUserId = await ctx.db.insert("users", {
       clerkId,
       name: cleanName,
+      savedNames: cleanName === "Roommate" ? [] : [cleanName],
     });
 
     return {
       _id: newUserId,
       clerkId,
       name: cleanName,
+      savedNames: cleanName === "Roommate" ? [] : [cleanName],
       householdId: undefined,
     };
   },
@@ -87,6 +102,126 @@ export const currentUser = query({
       household = await ctx.db.get(user.householdId);
     }
 
-    return { ...user, household };
+    return {
+      ...user,
+      savedNames: user.savedNames ?? [],
+      household,
+    };
+  },
+});
+
+/**
+ * Switch active display name to an existing saved name.
+ */
+export const setActiveName = mutation({
+  args: {
+    clerkId: v.optional(v.string()),
+    name: v.string(),
+  },
+  handler: async (
+    ctx: MutationCtx,
+    args: { clerkId?: string; name: string }
+  ) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const clerkId = identity?.subject || args.clerkId;
+    if (!clerkId) throw new Error("Not authenticated");
+
+    const clean = args.name.trim();
+    if (!clean) throw new Error("Name cannot be empty");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q: any) => q.eq("clerkId", clerkId))
+      .unique();
+    if (!user) throw new Error("User record not found");
+
+    const saved = user.savedNames ?? [];
+    if (!saved.includes(clean)) {
+      throw new Error("That name isn't in your saved list");
+    }
+
+    await ctx.db.patch(user._id, { name: clean });
+    return { success: true, name: clean };
+  },
+});
+
+/**
+ * Add a new name to the saved list and make it the active name.
+ */
+export const addSavedName = mutation({
+  args: {
+    clerkId: v.optional(v.string()),
+    name: v.string(),
+  },
+  handler: async (
+    ctx: MutationCtx,
+    args: { clerkId?: string; name: string }
+  ) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const clerkId = identity?.subject || args.clerkId;
+    if (!clerkId) throw new Error("Not authenticated");
+
+    const clean = args.name.trim();
+    if (!clean) throw new Error("Name cannot be empty");
+    if (clean.length > 40) throw new Error("Name is too long");
+    if (clean === "Roommate") throw new Error("Pick a different name");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q: any) => q.eq("clerkId", clerkId))
+      .unique();
+    if (!user) throw new Error("User record not found");
+
+    const saved = user.savedNames ?? [];
+    const nextSaved = saved.includes(clean) ? saved : [...saved, clean];
+
+    await ctx.db.patch(user._id, {
+      name: clean,
+      savedNames: nextSaved,
+    });
+    return { success: true, name: clean, savedNames: nextSaved };
+  },
+});
+
+/**
+ * Remove a name from the saved list. Cannot remove the currently active name
+ * or the last remaining name.
+ */
+export const removeSavedName = mutation({
+  args: {
+    clerkId: v.optional(v.string()),
+    name: v.string(),
+  },
+  handler: async (
+    ctx: MutationCtx,
+    args: { clerkId?: string; name: string }
+  ) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const clerkId = identity?.subject || args.clerkId;
+    if (!clerkId) throw new Error("Not authenticated");
+
+    const clean = args.name.trim();
+    if (!clean) throw new Error("Name cannot be empty");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q: any) => q.eq("clerkId", clerkId))
+      .unique();
+    if (!user) throw new Error("User record not found");
+
+    const saved = user.savedNames ?? [];
+    if (!saved.includes(clean)) {
+      throw new Error("That name isn't saved");
+    }
+    if (clean === user.name) {
+      throw new Error("Switch to a different name before removing this one");
+    }
+    const remaining = saved.filter((n) => n !== clean);
+    if (remaining.length === 0) {
+      throw new Error("Keep at least one name");
+    }
+
+    await ctx.db.patch(user._id, { savedNames: remaining });
+    return { success: true, savedNames: remaining };
   },
 });

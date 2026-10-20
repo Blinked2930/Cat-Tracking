@@ -1,13 +1,20 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, UserButton } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import OnboardingFlow from "@/components/OnboardingFlow";
 import HouseholdSetupFlow from "@/components/HouseholdSetupFlow";
 import CatDashboard from "@/components/CatDashboard";
-import { LayoutDashboard, FileText, Settings, LogOut, AlertTriangle } from "lucide-react";
+import DisplayNameDropdown from "@/components/DisplayNameDropdown";
+import {
+  LayoutDashboard,
+  FileText,
+  Settings,
+  LogOut,
+  AlertTriangle,
+} from "lucide-react";
 
 interface ActiveHousehold {
   id: string;
@@ -143,6 +150,15 @@ export default function Home() {
               </button>
             )}
           </nav>
+
+          <div className="flex items-center gap-2">
+            {clerkUser && (
+              <>
+                <DisplayNameDropdown />
+                <UserButton />
+              </>
+            )}
+          </div>
         </div>
       </header>
 
@@ -169,7 +185,6 @@ export default function Home() {
               }}
             />
 
-            {/* Danger zone */}
             <div className="max-w-3xl mx-auto">
               <div className="border-3 border-black bg-white p-5 shadow-[4px_4px_0_0_var(--ink)]">
                 <div className="flex items-start gap-3 mb-3">
@@ -181,7 +196,8 @@ export default function Home() {
                       Danger Zone
                     </h3>
                     <p className="text-[11px] font-mono text-ink-muted mt-0.5">
-                      Leaving removes you from this household. Cat-care history stays with the crew.
+                      Leaving removes you from this household. Cat-care history
+                      stays with the crew.
                     </p>
                   </div>
                 </div>
@@ -211,7 +227,7 @@ export default function Home() {
               householdId={activeHousehold.id}
               householdName={activeHousehold.name}
               inviteCode={activeHousehold.inviteCode}
-              userName="Emmett"
+              userName={currentUserData?.name || "Roommate"}
             />
           </section>
         )}
@@ -219,8 +235,8 @@ export default function Home() {
         {activeView === "dashboard" && !activeHousehold && (
           <section className="max-w-xl mx-auto text-center py-12">
             <p className="font-mono text-sm text-ink-muted">
-              No household loaded. Go to <strong>JOIN</strong> to create
-              or join one.
+              No household loaded. Go to <strong>JOIN</strong> to create or join
+              one.
             </p>
           </section>
         )}
@@ -232,7 +248,6 @@ export default function Home() {
         </p>
       </footer>
 
-      {/* Leave confirmation modal */}
       {showLeaveConfirm && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs"
@@ -252,8 +267,8 @@ export default function Home() {
             </div>
 
             <p className="text-xs font-mono text-ink-muted mb-6 leading-relaxed">
-              You&apos;ll lose access to this household until someone re-invites you with the code.
-              Your past cat-care logs stay with the crew.
+              You&apos;ll lose access to this household until someone re-invites
+              you with the code. Your past cat-care logs stay with the crew.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3">

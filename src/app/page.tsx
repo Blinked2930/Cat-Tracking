@@ -24,12 +24,12 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f4f1ea] text-[#0d0d0d] flex flex-col justify-between selection:bg-[#ff2a85] selection:text-white pb-8">
+    <div className="min-h-screen bg-[#A7A6A2] text-[#0d0d0d] flex flex-col justify-between selection:bg-[#A01AB1] selection:text-white pb-8">
       {/* Sleek Minimal Header */}
-      <header className="w-full bg-[#0d0d0d] text-[#f4f1ea] border-b-4 border-black py-3 px-4 sm:px-8">
+      <header className="w-full bg-[#0d0d0d] text-[#A7A6A2] border-b-4 border-black py-3 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 font-mono">
           <div className="flex items-center gap-2.5">
-            <span className="w-7 h-7 bg-[#ff2a85] text-white flex items-center justify-center font-black text-sm border-2 border-white shadow-[2px_2px_0_0_#ffe600]">
+            <span className="w-7 h-7 bg-[#A01AB1] text-white flex items-center justify-center font-black text-sm border-2 border-white shadow-[2px_2px_0_0_#3FD6CA]">
               🐾
             </span>
             <span className="font-black tracking-tight text-lg uppercase text-white">
@@ -42,8 +42,8 @@ export default function Home() {
               onClick={goToDashboard}
               disabled={!activeHousehold}
               className={`px-3 py-1 font-bold border-2 transition-all flex items-center gap-1.5 ${activeView === "dashboard"
-                  ? "bg-[#ffe600] text-black border-black shadow-[2px_2px_0_0_#ff2a85]"
-                  : "bg-black text-[#f4f1ea] border-transparent hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                  ? "bg-[#3FD6CA] text-black border-black shadow-[2px_2px_0_0_#A01AB1]"
+                  : "bg-black text-[#A7A6A2] border-transparent hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
                 }`}
             >
               <LayoutDashboard className="w-3.5 h-3.5" />
@@ -54,8 +54,8 @@ export default function Home() {
               onClick={() => activeHousehold && setActiveView("setup")}
               disabled={!activeHousehold}
               className={`px-3 py-1 font-bold border-2 transition-all flex items-center gap-1.5 ${activeView === "setup"
-                  ? "bg-[#ffe600] text-black border-black shadow-[2px_2px_0_0_#ff2a85]"
-                  : "bg-black text-[#f4f1ea] border-transparent hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                  ? "bg-[#3FD6CA] text-black border-black shadow-[2px_2px_0_0_#A01AB1]"
+                  : "bg-black text-[#A7A6A2] border-transparent hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
                 }`}
             >
               <Settings className="w-3.5 h-3.5" />
@@ -65,8 +65,8 @@ export default function Home() {
             <button
               onClick={() => setActiveView("onboarding")}
               className={`px-3 py-1 font-bold border-2 transition-all flex items-center gap-1.5 ${activeView === "onboarding"
-                  ? "bg-[#ffe600] text-black border-black shadow-[2px_2px_0_0_#ff2a85]"
-                  : "bg-black text-[#f4f1ea] border-transparent hover:border-zinc-700"
+                  ? "bg-[#3FD6CA] text-black border-black shadow-[2px_2px_0_0_#A01AB1]"
+                  : "bg-black text-[#A7A6A2] border-transparent hover:border-zinc-700"
                 }`}
             >
               <FileText className="w-3.5 h-3.5" />

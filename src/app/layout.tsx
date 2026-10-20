@@ -44,7 +44,7 @@ export default function RootLayout({
           <link rel="icon" href="/icon.svg" type="image/svg+xml" />
           <link rel="apple-touch-icon" href="/icon-192x192.png" />
         </head>
-        <body className="min-h-full flex flex-col font-mono bg-[#f4f1ea] text-[#0d0d0d] selection:bg-[#ff2a85] selection:text-white">
+        <body className="min-h-full flex flex-col font-mono bg-[#A7A6A2] text-[#0d0d0d] selection:bg-[#A01AB1] selection:text-white">
           <ConvexClientProvider>
             {children}
           </ConvexClientProvider>

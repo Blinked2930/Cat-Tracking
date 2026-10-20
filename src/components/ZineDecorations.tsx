@@ -3,7 +3,7 @@ import React from "react";
 export function MaskingTape({ className = "", text }: { className?: string; text?: string }) {
   return (
     <div
-      className={`inline-block bg-[#fff5a0]/90 text-black font-mono text-xs font-bold px-3 py-1 border-y-2 border-black/30 shadow-sm transform -rotate-1 select-none backdrop-blur-xs ${className}`}
+      className={`inline-block bg-[#3FD6CA]/90 text-black font-mono text-xs font-bold px-3 py-1 border-y-2 border-black/30 shadow-sm transform -rotate-1 select-none backdrop-blur-xs ${className}`}
       style={{
         boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
         clipPath: "polygon(2% 0%, 98% 0%, 100% 100%, 0% 100%)",
@@ -34,9 +34,9 @@ export function StampBadge({
   className?: string;
 }) {
   const bgStyles = {
-    pink: "bg-[#ff2a85] text-white border-black",
-    yellow: "bg-[#ffe600] text-black border-black",
-    black: "bg-[#0d0d0d] text-[#f4f1ea] border-black",
+    pink: "bg-[#A01AB1] text-white border-black",
+    yellow: "bg-[#3FD6CA] text-black border-black",
+    black: "bg-[#0d0d0d] text-[#A7A6A2] border-black",
     cyan: "bg-[#00f0ff] text-black border-black",
   };
 

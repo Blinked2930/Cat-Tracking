@@ -83,13 +83,13 @@ export default function JaggedCatSilhouette({
               <line x1="4" y1="34" x2="36" y2="38" stroke="#141414" strokeWidth="3.5" />
 
               {/* Angled scratches */}
-              <line x1="6" y1="0" x2="14" y2="40" stroke="#ff2a85" strokeWidth="1" strokeOpacity="0.4" />
-              <line x1="26" y1="0" x2="34" y2="40" stroke="#ffe600" strokeWidth="0.8" strokeOpacity="0.3" />
+              <line x1="6" y1="0" x2="14" y2="40" stroke="#A01AB1" strokeWidth="1" strokeOpacity="0.4" />
+              <line x1="26" y1="0" x2="34" y2="40" stroke="#3FD6CA" strokeWidth="0.8" strokeOpacity="0.3" />
 
               {/* Halftone stipple speckles */}
-              <circle cx="10" cy="10" r="1.5" fill="#f4f1ea" opacity="0.3" />
-              <circle cx="28" cy="24" r="1.2" fill="#f4f1ea" opacity="0.35" />
-              <circle cx="18" cy="32" r="1.8" fill="#f4f1ea" opacity="0.25" />
+              <circle cx="10" cy="10" r="1.5" fill="#A7A6A2" opacity="0.3" />
+              <circle cx="28" cy="24" r="1.2" fill="#A7A6A2" opacity="0.35" />
+              <circle cx="18" cy="32" r="1.8" fill="#A7A6A2" opacity="0.25" />
             </pattern>
 
             {/* Halftone Speckle Pattern for Unfilled Paper */}
@@ -99,7 +99,7 @@ export default function JaggedCatSilhouette({
               height="12"
               patternUnits="userSpaceOnUse"
             >
-              <rect width="12" height="12" fill="#f4f1ea" />
+              <rect width="12" height="12" fill="#A7A6A2" />
               <circle cx="2" cy="2" r="0.75" fill="#3a3a3a" opacity="0.15" />
               <circle cx="8" cy="8" r="0.75" fill="#3a3a3a" opacity="0.15" />
             </pattern>
@@ -144,12 +144,12 @@ export default function JaggedCatSilhouette({
               {/* Messy, scribbled rising ink top edge */}
               <path
                 d="M 0 0 L 25 -4 L 50 3 L 75 -6 L 100 2 L 125 -5 L 150 4 L 175 -3 L 200 0 L 200 8 L 0 8 Z"
-                fill="#ff2a85"
+                fill="#A01AB1"
                 opacity="0.9"
               />
               <path
                 d="M 0 2 L 30 -2 L 60 4 L 90 -4 L 120 3 L 150 -3 L 180 4 L 200 1"
-                stroke="#ffe600"
+                stroke="#3FD6CA"
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 fill="none"
@@ -181,22 +181,22 @@ export default function JaggedCatSilhouette({
 
           {/* Pierced Ear Punk Safety Pin (Left Ear) */}
           <g className="transition-transform duration-300 hover:rotate-3">
-            <line x1="62" y1="52" x2="82" y2="38" stroke="#ffe600" strokeWidth="4.5" strokeLinecap="round" />
-            <circle cx="62" cy="52" r="5" fill="#ffe600" stroke="#0d0d0d" strokeWidth="2.5" />
+            <line x1="62" y1="52" x2="82" y2="38" stroke="#3FD6CA" strokeWidth="4.5" strokeLinecap="round" />
+            <circle cx="62" cy="52" r="5" fill="#3FD6CA" stroke="#0d0d0d" strokeWidth="2.5" />
             <circle cx="82" cy="38" r="3.5" fill="#0d0d0d" />
           </g>
 
           {/* Slanted Aggressive Cat Eyes */}
           <g className="mix-blend-difference">
-            <polygon points="68,125 90,136 78,148" fill="#ffe600" stroke="#0d0d0d" strokeWidth="2.5" />
-            <polygon points="132,125 110,136 122,148" fill="#ffe600" stroke="#0d0d0d" strokeWidth="2.5" />
+            <polygon points="68,125 90,136 78,148" fill="#3FD6CA" stroke="#0d0d0d" strokeWidth="2.5" />
+            <polygon points="132,125 110,136 122,148" fill="#3FD6CA" stroke="#0d0d0d" strokeWidth="2.5" />
             {/* Pupil slits */}
             <line x1="79" y1="128" x2="79" y2="145" stroke="#0d0d0d" strokeWidth="3" strokeLinecap="round" />
             <line x1="121" y1="128" x2="121" y2="145" stroke="#0d0d0d" strokeWidth="3" strokeLinecap="round" />
           </g>
 
           {/* Stitched Nose */}
-          <polygon points="100,165 92,175 108,175" fill="#ff2a85" stroke="#0d0d0d" strokeWidth="2" />
+          <polygon points="100,165 92,175 108,175" fill="#A01AB1" stroke="#0d0d0d" strokeWidth="2" />
           <line x1="100" y1="175" x2="100" y2="188" stroke="#0d0d0d" strokeWidth="3" />
         </svg>
 
@@ -207,7 +207,7 @@ export default function JaggedCatSilhouette({
               text="ALL CHORES COMPLETE!"
               color="pink"
               rotation="-rotate-6"
-              className="text-xs sm:text-sm px-4 py-2 border-4 border-black shadow-[5px_5px_0_0_#ffe600]"
+              className="text-xs sm:text-sm px-4 py-2 border-4 border-black shadow-[5px_5px_0_0_#3FD6CA]"
             />
           </div>
         )}
@@ -215,7 +215,7 @@ export default function JaggedCatSilhouette({
 
       {/* Clean numerical progress */}
       <div className="mt-2.5 flex items-center gap-2 font-mono text-xs">
-        <span className="font-bold bg-black text-[#f4f1ea] px-2.5 py-0.5 border border-black shadow-[2px_2px_0_0_#ffe600]">
+        <span className="font-bold bg-black text-[#A7A6A2] px-2.5 py-0.5 border border-black shadow-[2px_2px_0_0_#3FD6CA]">
           {pct}%
         </span>
         <span className="font-bold text-[#555]">

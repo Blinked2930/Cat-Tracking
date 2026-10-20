@@ -2,14 +2,16 @@
 
 @layer base {
   :root {
-    --paper: #f4f1ea;
-    --paper-muted: #e8e3d5;
-    --paper-dark: #dad4c3;
+    --paper: #A7A6A2;
+    --paper-muted: #B5B4B0;
+    --paper-dark: #8F8E8A;
     --ink: #0d0d0d;
     --ink-muted: #3a3a3a;
     --pencil: #666666;
-    --punk-pink: #ff2a85;
-    --punk-yellow: #ffe600;
+    --punk-pink: #A01AB1;
+    --punk-pink-dark: #84108F;
+    --punk-yellow: #3FD6CA;
+    --punk-yellow-light: #63E0D5;
     --punk-green: #00e676;
     --punk-cyan: #00f0ff;
     --punk-orange: #ff5500;
@@ -19,7 +21,7 @@
     background-color: var(--paper);
     color: var(--ink);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    background-image: 
+    background-image:
       radial-gradient(#1a1a1a 0.75px, transparent 0.75px),
       radial-gradient(#1a1a1a 0.75px, var(--paper) 0.75px);
     background-size: 30px 30px;
@@ -37,7 +39,9 @@
   --color-ink-muted: var(--ink-muted);
   --color-pencil: var(--pencil);
   --color-punk-pink: var(--punk-pink);
+  --color-punk-pink-dark: var(--punk-pink-dark);
   --color-punk-yellow: var(--punk-yellow);
+  --color-punk-yellow-light: var(--punk-yellow-light);
   --color-punk-green: var(--punk-green);
   --color-punk-cyan: var(--punk-cyan);
   --color-punk-orange: var(--punk-orange);
@@ -46,8 +50,8 @@
   --shadow-hard: 4px 4px 0px 0px #0d0d0d;
   --shadow-hard-lg: 6px 6px 0px 0px #0d0d0d;
   --shadow-hard-xl: 8px 8px 0px 0px #0d0d0d;
-  --shadow-punk-pink: 4px 4px 0px 0px #ff2a85;
-  --shadow-punk-yellow: 4px 4px 0px 0px #ffe600;
+  --shadow-punk-pink: 4px 4px 0px 0px #A01AB1;
+  --shadow-punk-yellow: 4px 4px 0px 0px #3FD6CA;
 }
 
 /* Brutalist punk UI utilities */
@@ -76,11 +80,11 @@
 }
 
 .punk-shadow-pink {
-  box-shadow: 4px 4px 0px 0px #ff2a85;
+  box-shadow: 4px 4px 0px 0px #A01AB1;
 }
 
 .punk-shadow-yellow {
-  box-shadow: 4px 4px 0px 0px #ffe600;
+  box-shadow: 4px 4px 0px 0px #3FD6CA;
 }
 
 .punk-button {
@@ -113,6 +117,7 @@
 .sketch-line {
   position: relative;
 }
+
 .sketch-line::after {
   content: "";
   position: absolute;

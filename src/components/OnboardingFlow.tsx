@@ -147,7 +147,7 @@ export default function OnboardingFlow({
   }
 
   return (
-    <div className="w-full bg-[#f4f1ea] border-4 border-[#0d0d0d] shadow-[6px_6px_0px_0px_#0d0d0d] p-6 sm:p-8">
+    <div className="w-full bg-[#A7A6A2] border-4 border-[#0d0d0d] shadow-[6px_6px_0px_0px_#0d0d0d] p-6 sm:p-8">
       <div className="border-b-3 border-black pb-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black">
@@ -167,7 +167,7 @@ export default function OnboardingFlow({
             <UserButton />
           ) : (
             <SignInButton mode="modal">
-              <button className="punk-button bg-[#ffe600] text-black px-3 py-1 text-xs font-bold border-2 border-black shadow-[2px_2px_0_0_#ff2a85]">
+              <button className="punk-button bg-[#3FD6CA] text-black px-3 py-1 text-xs font-bold border-2 border-black shadow-[2px_2px_0_0_#A01AB1]">
                 SIGN IN
               </button>
             </SignInButton>
@@ -178,8 +178,8 @@ export default function OnboardingFlow({
       {statusMessage && (
         <div
           className={`mb-5 p-3 border-2 border-black text-xs font-mono font-bold flex items-center justify-between ${statusMessage.type === "error"
-            ? "bg-[#ff2a85] text-white"
-            : "bg-[#ffe600] text-black"
+            ? "bg-[#A01AB1] text-white"
+            : "bg-[#3FD6CA] text-black"
             }`}
         >
           <span>{statusMessage.text}</span>
@@ -197,7 +197,7 @@ export default function OnboardingFlow({
               {currentHousehold.name}
             </h3>
 
-            <div className="bg-[#f4f1ea] border-2 border-black p-3 flex items-center justify-between gap-3 mb-4">
+            <div className="bg-[#A7A6A2] border-2 border-black p-3 flex items-center justify-between gap-3 mb-4">
               <div>
                 <span className="text-[10px] font-mono text-[#666] uppercase block">
                   ROOMMATE INVITE CODE
@@ -208,7 +208,7 @@ export default function OnboardingFlow({
               </div>
               <button
                 onClick={() => copyToClipboard(currentHousehold.inviteCode)}
-                className="punk-button bg-[#ffe600] text-black px-3 py-1.5 text-xs font-bold flex items-center gap-1.5"
+                className="punk-button bg-[#3FD6CA] text-black px-3 py-1.5 text-xs font-bold flex items-center gap-1.5"
               >
                 {copied ? (
                   <Check className="w-3.5 h-3.5" />
@@ -230,7 +230,7 @@ export default function OnboardingFlow({
                   });
                 }
               }}
-              className="punk-button w-full bg-black text-[#f4f1ea] py-3 text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#ff2a85]"
+              className="punk-button w-full bg-black text-[#A7A6A2] py-3 text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#A01AB1]"
             >
               <span>OPEN DASHBOARD</span>
               <ArrowRight className="w-4 h-4" />
@@ -247,7 +247,7 @@ export default function OnboardingFlow({
                 setStatusMessage(null);
               }}
               className={`punk-button py-2.5 px-3 text-xs font-bold transition-all ${activeTab === "create"
-                ? "bg-black text-[#f4f1ea] shadow-[3px_3px_0px_0px_#ff2a85]"
+                ? "bg-black text-[#A7A6A2] shadow-[3px_3px_0px_0px_#A01AB1]"
                 : "bg-white text-black hover:bg-zinc-100"
                 }`}
             >
@@ -261,7 +261,7 @@ export default function OnboardingFlow({
                 setStatusMessage(null);
               }}
               className={`punk-button py-2.5 px-3 text-xs font-bold transition-all ${activeTab === "join"
-                ? "bg-black text-[#f4f1ea] shadow-[3px_3px_0px_0px_#ffe600]"
+                ? "bg-black text-[#A7A6A2] shadow-[3px_3px_0px_0px_#3FD6CA]"
                 : "bg-white text-black hover:bg-zinc-100"
                 }`}
             >
@@ -281,14 +281,14 @@ export default function OnboardingFlow({
                   onChange={(e) => setSquatName(e.target.value)}
                   placeholder="e.g. Apt 4B, The Alley Squat"
                   required
-                  className="w-full bg-white border-3 border-black p-3 font-mono font-bold text-sm text-black focus:outline-none focus:border-[#ff2a85]"
+                  className="w-full bg-white border-3 border-black p-3 font-mono font-bold text-sm text-black focus:outline-none focus:border-[#A01AB1]"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="punk-button w-full bg-[#ff2a85] text-white py-3 px-4 text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#e01e72]"
+                className="punk-button w-full bg-[#A01AB1] text-white py-3 px-4 text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#84108F]"
               >
                 <span>{isSubmitting ? "CREATING..." : "CREATE HOUSEHOLD ➔"}</span>
               </button>
@@ -306,7 +306,7 @@ export default function OnboardingFlow({
                   onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
                   placeholder="PUNK69"
                   required
-                  className="w-full bg-white border-3 border-black py-3 px-4 text-center font-mono font-bold text-2xl tracking-[0.3em] uppercase text-black focus:outline-none focus:border-[#ffe600]"
+                  className="w-full bg-white border-3 border-black py-3 px-4 text-center font-mono font-bold text-2xl tracking-[0.3em] uppercase text-black focus:outline-none focus:border-[#3FD6CA]"
                 />
               </div>
 
@@ -314,7 +314,7 @@ export default function OnboardingFlow({
                 type="submit"
                 disabled={isSubmitting || inviteCode.length !== 6}
                 className={`punk-button w-full py-3 px-4 text-xs font-bold flex items-center justify-center gap-2 ${inviteCode.length === 6
-                  ? "bg-[#ffe600] text-black hover:bg-[#ffea33]"
+                  ? "bg-[#3FD6CA] text-black hover:bg-[#63E0D5]"
                   : "bg-zinc-200 text-zinc-400 cursor-not-allowed"
                   }`}
               >

@@ -306,8 +306,8 @@ export default function HouseholdSetupFlow({
       {statusMessage && (
         <div
           className={`mb-5 p-3 border-2 border-black text-xs font-mono font-bold flex items-center justify-between ${statusMessage.type === "error"
-              ? "bg-[#ff2a85] text-white"
-              : "bg-[#ffe600] text-black"
+              ? "bg-[#A01AB1] text-white"
+              : "bg-[#3FD6CA] text-black"
             }`}
         >
           <span>{statusMessage.text}</span>
@@ -319,7 +319,7 @@ export default function HouseholdSetupFlow({
         {cats.map((cat, catIdx) => (
           <div
             key={cat.id}
-            className="bg-[#faf8f5] border-3 border-black p-5 shadow-[4px_4px_0px_0px_#0d0d0d] space-y-4"
+            className="bg-[#B5B4B0] border-3 border-black p-5 shadow-[4px_4px_0px_0px_#0d0d0d] space-y-4"
           >
             <div className="flex items-center justify-between border-b-2 border-black/20 pb-3">
               <span className="font-mono font-black text-base uppercase text-black">
@@ -349,7 +349,7 @@ export default function HouseholdSetupFlow({
                   onChange={(e) => handleUpdateCatName(cat.id, e.target.value)}
                   placeholder="e.g. Iggy Pop, Dexter"
                   required
-                  className="w-full bg-white border-2 border-black p-2.5 font-mono font-bold text-sm text-black uppercase focus:outline-none focus:border-[#ff2a85]"
+                  className="w-full bg-white border-2 border-black p-2.5 font-mono font-bold text-sm text-black uppercase focus:outline-none focus:border-[#A01AB1]"
                 />
               </div>
 
@@ -407,7 +407,7 @@ export default function HouseholdSetupFlow({
                 <button
                   type="button"
                   onClick={() => handleAddTask(cat.id)}
-                  className="text-xs font-mono font-bold text-black hover:text-[#ff2a85] flex items-center gap-1"
+                  className="text-xs font-mono font-bold text-black hover:text-[#A01AB1] flex items-center gap-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add Chore</span>
@@ -431,7 +431,7 @@ export default function HouseholdSetupFlow({
                         }
                         placeholder="Chore title (e.g. Kibble, Insulin)"
                         required
-                        className="w-full sm:flex-1 bg-[#f4f1ea] border border-black p-1.5 font-mono text-xs font-bold uppercase focus:outline-none"
+                        className="w-full sm:flex-1 bg-[#A7A6A2] border border-black p-1.5 font-mono text-xs font-bold uppercase focus:outline-none"
                       />
 
                       <div className="flex items-center gap-2 self-end sm:self-auto">
@@ -458,7 +458,7 @@ export default function HouseholdSetupFlow({
                               })
                             }
                             className={`px-2 py-0.5 font-bold border-l border-black ${task.type === "counter"
-                                ? "bg-black text-[#ffe600]"
+                                ? "bg-black text-[#3FD6CA]"
                                 : "bg-white text-black"
                               }`}
                           >
@@ -518,7 +518,7 @@ export default function HouseholdSetupFlow({
                           }
                           placeholder='{"dosage": "2 units", "notes": "After eating"}'
                           rows={2}
-                          className="w-full mt-1.5 bg-[#f4f1ea] border border-black p-2 font-mono text-xs focus:outline-none"
+                          className="w-full mt-1.5 bg-[#A7A6A2] border border-black p-2 font-mono text-xs focus:outline-none"
                         />
                       )}
                     </div>
@@ -542,7 +542,7 @@ export default function HouseholdSetupFlow({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="punk-button bg-[#ff2a85] text-white py-2.5 px-6 text-xs font-bold flex items-center gap-1.5 hover:bg-[#e01e72]"
+            className="punk-button bg-[#A01AB1] text-white py-2.5 px-6 text-xs font-bold flex items-center gap-1.5 hover:bg-[#84108F]"
           >
             <span>
               {isSubmitting ? "Saving..." : "Save & Open Dashboard ➔"}

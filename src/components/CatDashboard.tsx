@@ -37,17 +37,10 @@ interface CatBlockData {
   completionPercentage: number;
 }
 
-/**
- * A "real" Convex document ID is a lowercase-alphanumeric string that does
- * not start with "mock-" and is not one of our local placeholder IDs.
- * We treat anything else as mock data and skip the backend query.
- */
 function isRealConvexId(id: string | undefined | null): boolean {
   if (!id) return false;
   if (id.startsWith("mock-")) return false;
   if (id === "squat-bedford") return false;
-  // Convex IDs are ~32 chars of base32-ish chars; we only need to reject
-  // obviously-local placeholders here.
   return id.length >= 20;
 }
 
@@ -64,8 +57,6 @@ export default function CatDashboard({
   userName?: string;
   onLeaveHousehold?: () => void;
 }) {
-  // -------- Hooks: every hook is called unconditionally, in order --------
-
   const [isAddCatOpen, setIsAddCatOpen] = useState(false);
   const [selectedCatForDetail, setSelectedCatForDetail] =
     useState<CatBlockData | null>(null);
@@ -76,12 +67,8 @@ export default function CatDashboard({
     setTodayString(new Date().toISOString().split("T")[0]);
   }, []);
 
-  // Compute this *before* useQuery so we can pass "skip" cleanly.
   const shouldQueryBackend = isRealConvexId(householdId);
 
-  // IMPORTANT: useQuery is called unconditionally. If we shouldn't query,
-  // we pass "skip" as the args, which is the documented Convex way to
-  // conditionally disable a query without violating the Rules of Hooks.
   const dashboardData = useQuery(
     api.tasks.getDashboardData,
     shouldQueryBackend
@@ -89,8 +76,6 @@ export default function CatDashboard({
       : "skip"
   );
 
-  // useMutation has no conditional variant, but it is safe to call
-  // unconditionally — it just returns a function.
   const logTaskMutation = useMutation(api.tasks.logTask);
   const unlogTaskMutation = useMutation(api.tasks.unlogTask);
 
@@ -193,8 +178,6 @@ export default function CatDashboard({
     },
   ]);
 
-  // -------- Derived values (all hooks called above this point) --------
-
   const isLiveBackend = useMemo(
     () => Boolean(shouldQueryBackend && dashboardData),
     [shouldQueryBackend, dashboardData]
@@ -207,15 +190,12 @@ export default function CatDashboard({
     return localCats;
   }, [isLiveBackend, dashboardData, localCats]);
 
-  // -------- Handlers --------
-
   const handleToggleTask = async (catId: string, task: TaskItem) => {
     const nowTime = new Date().toLocaleTimeString([], {
       hour: "numeric",
       minute: "2-digit",
     });
 
-    // Live Convex Mutation
     if (isLiveBackend) {
       try {
         if (task.isDone && task.logs && task.logs.length > 0) {
@@ -238,7 +218,6 @@ export default function CatDashboard({
       return;
     }
 
-    // Local Simulation Toggle
     setLocalCats((prev) =>
       prev.map((cat) => {
         if (cat._id !== catId) return cat;
@@ -321,8 +300,6 @@ export default function CatDashboard({
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  // -------- Render --------
-
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6">
       {/* Clean Household Header */}
@@ -336,7 +313,7 @@ export default function CatDashboard({
             className="text-xs font-mono font-bold text-[#555] hover:text-black flex items-center gap-1.5 mt-0.5"
           >
             <span>CODE:</span>
-            <span className="bg-black text-[#ffe600] px-1.5 py-0.5 border border-black font-mono">
+            <span className="bg-black text-[#3FD6CA] px-1.5 py-0.5 border border-black font-mono">
               {inviteCode}
             </span>
             <span className="text-[10px] text-zinc-500">
@@ -348,7 +325,7 @@ export default function CatDashboard({
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsAddCatOpen(true)}
-            className="punk-button bg-[#ffe600] text-black px-3.5 py-1.5 text-xs font-black flex items-center gap-1 hover:bg-[#ffea33]"
+            className="punk-button bg-[#3FD6CA] text-black px-3.5 py-1.5 text-xs font-black flex items-center gap-1 hover:bg-[#63E0D5]"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>ADD CAT</span>
@@ -376,20 +353,20 @@ export default function CatDashboard({
         {activeCats.map((cat) => (
           <div
             key={cat._id}
-            className="bg-[#faf8f5] border-3 border-black shadow-[6px_6px_0px_0px_#0d0d0d] flex flex-col justify-between overflow-hidden"
+            className="bg-[#B5B4B0] border-3 border-black shadow-[6px_6px_0px_0px_#0d0d0d] flex flex-col justify-between overflow-hidden"
           >
-            <div className="bg-[#f4f1ea] border-b-3 border-black px-4 py-3 flex items-center justify-between">
+            <div className="bg-[#A7A6A2] border-b-3 border-black px-4 py-3 flex items-center justify-between">
               <h2 className="text-xl font-black uppercase tracking-tight text-black">
                 {cat.name}
               </h2>
-              <span className="font-mono text-xs font-black bg-black text-[#ffe600] px-2 py-0.5 border border-black">
+              <span className="font-mono text-xs font-black bg-black text-[#3FD6CA] px-2 py-0.5 border border-black">
                 {cat.completionPercentage}%
               </span>
             </div>
 
             <div
               onClick={() => setSelectedCatForDetail(cat)}
-              className="p-5 bg-[#f4f1ea] border-b-3 border-black flex flex-col items-center justify-center relative cursor-pointer group hover:bg-[#fffbe6] transition-colors"
+              className="p-5 bg-[#A7A6A2] border-b-3 border-black flex flex-col items-center justify-center relative cursor-pointer group hover:bg-[#C2C1BD] transition-colors"
               title="Click to view details and activity log"
             >
               <JaggedCatSilhouette
@@ -413,13 +390,13 @@ export default function CatDashboard({
                     key={task._id}
                     onClick={() => handleToggleTask(cat._id, task)}
                     className={`cursor-pointer border-2 border-black p-2.5 flex items-center justify-between transition-all select-none ${task.isDone
-                        ? "bg-[#f4f1ea] text-[#777]"
+                        ? "bg-[#A7A6A2] text-[#777]"
                         : "bg-white text-black hover:border-black shadow-[2px_2px_0_0_#000]"
                       }`}
                   >
                     <div className="flex items-center gap-2.5">
                       <div
-                        className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-xs transition-colors shrink-0 ${task.isDone ? "bg-black text-[#ffe600]" : "bg-white"
+                        className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-xs transition-colors shrink-0 ${task.isDone ? "bg-black text-[#3FD6CA]" : "bg-white"
                           }`}
                       >
                         {task.type === "counter" ? (
@@ -443,7 +420,7 @@ export default function CatDashboard({
                           {task.title}
                         </p>
                         {task.lastLoggedBy && (
-                          <p className="text-[10px] font-mono text-[#ff2a85] font-bold">
+                          <p className="text-[10px] font-mono text-[#A01AB1] font-bold">
                             {task.lastLoggedBy} • {task.lastLoggedAt}
                           </p>
                         )}
@@ -458,7 +435,7 @@ export default function CatDashboard({
       </div>
 
       {/* Minimal Activity Feed */}
-      <div className="bg-[#faf8f5] border-3 border-black p-4 shadow-[4px_4px_0_0_#000]">
+      <div className="bg-[#B5B4B0] border-3 border-black p-4 shadow-[4px_4px_0_0_#000]">
         <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-black/20 font-mono text-xs">
           <span className="font-bold uppercase text-black flex items-center gap-1.5">
             <Users className="w-3.5 h-3.5" /> TODAY&apos;S LOGS

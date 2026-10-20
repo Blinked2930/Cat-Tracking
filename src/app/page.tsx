@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import OnboardingFlow from "@/components/OnboardingFlow";
 import HouseholdSetupFlow from "@/components/HouseholdSetupFlow";
@@ -16,7 +16,7 @@ interface ActiveHousehold {
 }
 
 export default function Home() {
-  const { user: clerkUser } = useUser();
+  const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
   const leaveHouseholdMutation = useMutation(api.households.leaveHousehold);
 
   const [activeView, setActiveView] = useState<
@@ -26,6 +26,34 @@ export default function Home() {
     useState<ActiveHousehold | null>(null);
   const [isLeaving, setIsLeaving] = useState(false);
   const [leaveError, setLeaveError] = useState<string | null>(null);
+
+  // Load the user's current household from Convex on mount / sign-in change.
+  // This is what makes refresh work: if the server says you're in a household,
+  // you land straight in the dashboard without clicking anything.
+  const currentUserData = useQuery(
+    api.users.currentUser,
+    clerkUser?.id ? { clerkId: clerkUser.id } : "skip"
+  );
+
+  useEffect(() => {
+    if (!currentUserData) return;
+
+    const household = currentUserData.household;
+
+    if (household) {
+      setActiveHousehold({
+        id: household._id,
+        name: household.name,
+        inviteCode: household.inviteCode,
+      });
+      // Only auto-advance if the user hasn't explicitly navigated to setup.
+      setActiveView((v) => (v === "setup" ? "setup" : "dashboard"));
+    } else {
+      // No household on the server → force back to onboarding.
+      setActiveHousehold(null);
+      setActiveView("onboarding");
+    }
+  }, [currentUserData]);
 
   const goToDashboard = () => {
     if (activeHousehold) setActiveView("dashboard");
@@ -55,6 +83,25 @@ export default function Home() {
     }
   };
 
+  // Render a spinner while Clerk or the initial currentUser query is loading,
+  // so we don't flash the onboarding screen before we know whether the user
+  // already has a household.
+  if (!isClerkLoaded) {
+    return (
+      <div className="min-h-screen bg-paper text-ink flex items-center justify-center font-mono text-sm">
+        Loading…
+      </div>
+    );
+  }
+
+  if (clerkUser && currentUserData === undefined) {
+    return (
+      <div className="min-h-screen bg-paper text-ink flex items-center justify-center font-mono text-sm">
+        Loading…
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-paper text-ink flex flex-col justify-between selection:bg-accent selection:text-white pb-8">
       <header className="w-full bg-ink text-paper border-b-4 border-black py-3 px-4 sm:px-8">
@@ -73,8 +120,8 @@ export default function Home() {
               onClick={goToDashboard}
               disabled={!activeHousehold}
               className={`px-3 py-1 font-bold border-2 transition-all flex items-center gap-1.5 ${activeView === "dashboard"
-                ? "bg-highlight text-black border-black shadow-[2px_2px_0_0_var(--accent)]"
-                : "bg-black text-paper border-transparent hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                  ? "bg-highlight text-black border-black shadow-[2px_2px_0_0_var(--accent)]"
+                  : "bg-black text-paper border-transparent hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
                 }`}
             >
               <LayoutDashboard className="w-3.5 h-3.5" />
@@ -85,8 +132,8 @@ export default function Home() {
               onClick={() => activeHousehold && setActiveView("setup")}
               disabled={!activeHousehold}
               className={`px-3 py-1 font-bold border-2 transition-all flex items-center gap-1.5 ${activeView === "setup"
-                ? "bg-highlight text-black border-black shadow-[2px_2px_0_0_var(--accent)]"
-                : "bg-black text-paper border-transparent hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                  ? "bg-highlight text-black border-black shadow-[2px_2px_0_0_var(--accent)]"
+                  : "bg-black text-paper border-transparent hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
                 }`}
             >
               <Settings className="w-3.5 h-3.5" />
@@ -97,8 +144,8 @@ export default function Home() {
               <button
                 onClick={() => setActiveView("onboarding")}
                 className={`px-3 py-1 font-bold border-2 transition-all flex items-center gap-1.5 ${activeView === "onboarding"
-                  ? "bg-highlight text-black border-black shadow-[2px_2px_0_0_var(--accent)]"
-                  : "bg-black text-paper border-transparent hover:border-zinc-700"
+                    ? "bg-highlight text-black border-black shadow-[2px_2px_0_0_var(--accent)]"
+                    : "bg-black text-paper border-transparent hover:border-zinc-700"
                   }`}
               >
                 <FileText className="w-3.5 h-3.5" />

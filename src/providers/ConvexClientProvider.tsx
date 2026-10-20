@@ -3,34 +3,31 @@
 import { ReactNode } from "react";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
-import { ClerkProvider, useAuth } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
-const clerkPubKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
-// Create Convex client instance (fallback URL prevents crashing before `npx convex dev` is run)
-const convex = new ConvexReactClient(convexUrl || "https://placeholder-cat-tracker.convex.cloud");
+if (!convexUrl) {
+  throw new Error(
+    "NEXT_PUBLIC_CONVEX_URL is not set. Run `npx convex dev` to provision a deployment, then restart the dev server."
+  );
+}
+
+const convex = new ConvexReactClient(convexUrl);
 
 /**
  * ConvexClientProvider
- * Wraps ClerkProvider and ConvexProviderWithClerk so all child components
- * have real-time access to Convex queries and Clerk authentication state.
+ * Wires Convex to Clerk's auth. Must be rendered *inside* <ClerkProvider>
+ * (which lives in layout.tsx) so that `useAuth` resolves to a real session.
  */
 export default function ConvexClientProvider({
   children,
 }: {
   children: ReactNode;
 }) {
-  // Graceful fallback before Clerk API keys are added in .env.local
-  if (!clerkPubKey) {
-    return <>{children}</>;
-  }
-
   return (
-    <ClerkProvider publishableKey={clerkPubKey}>
-      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-        {children}
-      </ConvexProviderWithClerk>
-    </ClerkProvider>
+    <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+      {children}
+    </ConvexProviderWithClerk>
   );
 }

@@ -22,7 +22,7 @@ export default function OnboardingFlow({
   const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
 
   const [activeTab, setActiveTab] = useState<"create" | "join">("create");
-  const [squatName, setSquatName] = useState("");
+  const [householdName, setHouseholdName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [copied, setCopied] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{
@@ -60,7 +60,7 @@ export default function OnboardingFlow({
 
   const handleCreateHousehold = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!squatName.trim()) {
+    if (!householdName.trim()) {
       setStatusMessage({ text: "Please enter a household name", type: "error" });
       return;
     }
@@ -74,14 +74,14 @@ export default function OnboardingFlow({
 
     try {
       const res = await createHouseholdMutation({
-        name: squatName.trim(),
+        name: householdName.trim(),
         clerkId: effectiveUserId,
       });
       setStatusMessage({
         text: `Household created! Invite Code: ${res.inviteCode}`,
         type: "success",
       });
-      setSquatName("");
+      setHouseholdName("");
     } catch (err: any) {
       setStatusMessage({
         text: err.message || "Failed to create household",
@@ -273,9 +273,9 @@ export default function OnboardingFlow({
                 </label>
                 <input
                   type="text"
-                  value={squatName}
-                  onChange={(e) => setSquatName(e.target.value)}
-                  placeholder="e.g. Apt 4B, The Alley Squat"
+                  value={householdName}
+                  onChange={(e) => setHouseholdName(e.target.value)}
+                  placeholder="e.g. Apt 4B, The Alley Loft"
                   required
                   className="w-full bg-white border-3 border-black p-3 font-mono font-bold text-sm text-black focus:outline-none focus:border-accent"
                 />

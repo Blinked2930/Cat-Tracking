@@ -1,10 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import OnboardingFlow from "@/components/OnboardingFlow";
 import HouseholdSetupFlow from "@/components/HouseholdSetupFlow";
 import CatDashboard from "@/components/CatDashboard";
-import { LayoutDashboard, FileText, Settings } from "lucide-react";
+import { LayoutDashboard, FileText, Settings, LogOut } from "lucide-react";
 
 interface ActiveHousehold {
   id: string;
@@ -13,14 +16,43 @@ interface ActiveHousehold {
 }
 
 export default function Home() {
+  const { user: clerkUser } = useUser();
+  const leaveHouseholdMutation = useMutation(api.households.leaveHousehold);
+
   const [activeView, setActiveView] = useState<
     "onboarding" | "setup" | "dashboard"
   >("onboarding");
   const [activeHousehold, setActiveHousehold] =
     useState<ActiveHousehold | null>(null);
+  const [isLeaving, setIsLeaving] = useState(false);
+  const [leaveError, setLeaveError] = useState<string | null>(null);
 
   const goToDashboard = () => {
     if (activeHousehold) setActiveView("dashboard");
+  };
+
+  const handleLeaveHousehold = async () => {
+    if (!clerkUser?.id) {
+      setLeaveError("You need to be signed in to leave.");
+      return;
+    }
+    const confirmed = window.confirm(
+      "Leave this household? You'll lose access until someone re-invites you."
+    );
+    if (!confirmed) return;
+
+    setIsLeaving(true);
+    setLeaveError(null);
+
+    try {
+      await leaveHouseholdMutation({ clerkId: clerkUser.id });
+      setActiveHousehold(null);
+      setActiveView("onboarding");
+    } catch (err: any) {
+      setLeaveError(err?.message || "Could not leave household");
+    } finally {
+      setIsLeaving(false);
+    }
   };
 
   return (
@@ -41,8 +73,8 @@ export default function Home() {
               onClick={goToDashboard}
               disabled={!activeHousehold}
               className={`px-3 py-1 font-bold border-2 transition-all flex items-center gap-1.5 ${activeView === "dashboard"
-                  ? "bg-highlight text-black border-black shadow-[2px_2px_0_0_var(--accent)]"
-                  : "bg-black text-paper border-transparent hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                ? "bg-highlight text-black border-black shadow-[2px_2px_0_0_var(--accent)]"
+                : "bg-black text-paper border-transparent hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
                 }`}
             >
               <LayoutDashboard className="w-3.5 h-3.5" />
@@ -53,24 +85,26 @@ export default function Home() {
               onClick={() => activeHousehold && setActiveView("setup")}
               disabled={!activeHousehold}
               className={`px-3 py-1 font-bold border-2 transition-all flex items-center gap-1.5 ${activeView === "setup"
-                  ? "bg-highlight text-black border-black shadow-[2px_2px_0_0_var(--accent)]"
-                  : "bg-black text-paper border-transparent hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                ? "bg-highlight text-black border-black shadow-[2px_2px_0_0_var(--accent)]"
+                : "bg-black text-paper border-transparent hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
                 }`}
             >
               <Settings className="w-3.5 h-3.5" />
               <span>SETUP</span>
             </button>
 
-            <button
-              onClick={() => setActiveView("onboarding")}
-              className={`px-3 py-1 font-bold border-2 transition-all flex items-center gap-1.5 ${activeView === "onboarding"
+            {!activeHousehold && (
+              <button
+                onClick={() => setActiveView("onboarding")}
+                className={`px-3 py-1 font-bold border-2 transition-all flex items-center gap-1.5 ${activeView === "onboarding"
                   ? "bg-highlight text-black border-black shadow-[2px_2px_0_0_var(--accent)]"
                   : "bg-black text-paper border-transparent hover:border-zinc-700"
-                }`}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>JOIN / SQUAT</span>
-            </button>
+                  }`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>JOIN</span>
+              </button>
+            )}
           </nav>
         </div>
       </header>
@@ -88,7 +122,7 @@ export default function Home() {
         )}
 
         {activeView === "setup" && activeHousehold && (
-          <section>
+          <section className="space-y-6">
             <HouseholdSetupFlow
               householdId={activeHousehold.id}
               householdName={activeHousehold.name}
@@ -97,6 +131,25 @@ export default function Home() {
                 setActiveView("dashboard");
               }}
             />
+
+            <div className="max-w-3xl mx-auto pt-4 border-t-2 border-black/20">
+              {leaveError && (
+                <div className="mb-3 p-2 border-2 border-black bg-accent text-white text-xs font-mono font-bold">
+                  {leaveError}
+                </div>
+              )}
+              <button
+                onClick={handleLeaveHousehold}
+                disabled={isLeaving}
+                className="w-full sm:w-auto punk-button bg-white text-red-600 py-2.5 px-4 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>{isLeaving ? "Leaving..." : "Leave Household"}</span>
+              </button>
+              <p className="text-[10px] font-mono text-ink-muted mt-2">
+                You&apos;ll be removed from this household. Your cat-care history stays with the crew.
+              </p>
+            </div>
           </section>
         )}
 
@@ -107,10 +160,7 @@ export default function Home() {
               householdName={activeHousehold.name}
               inviteCode={activeHousehold.inviteCode}
               userName="Emmett"
-              onLeaveHousehold={() => {
-                setActiveHousehold(null);
-                setActiveView("onboarding");
-              }}
+              onLeaveHousehold={handleLeaveHousehold}
             />
           </section>
         )}
@@ -118,7 +168,7 @@ export default function Home() {
         {activeView === "dashboard" && !activeHousehold && (
           <section className="max-w-xl mx-auto text-center py-12">
             <p className="font-mono text-sm text-ink-muted">
-              No household loaded. Go to <strong>JOIN / SQUAT</strong> to create
+              No household loaded. Go to <strong>JOIN</strong> to create
               or join one.
             </p>
           </section>

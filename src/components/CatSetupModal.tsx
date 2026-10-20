@@ -1,15 +1,96 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { MaskingTape, StampBadge, ZineStaple } from "./ZineDecorations";
-import { Plus, Trash2, X, Sparkles, Cat } from "lucide-react";
+import { Plus, Trash2, ChevronDown, Check } from "lucide-react";
 
 interface RoutineDraft {
   title: string;
   type: "checkbox" | "counter";
   frequency: number;
+}
+
+const TASK_TYPES = [
+  { value: "checkbox", label: "Checkbox (done / not done)" },
+  { value: "counter", label: "Counter (log multiple times)" },
+] as const;
+
+const FREQUENCIES = [1, 2, 3, 4, 5] as const;
+
+/**
+ * Reusable styled dropdown — replaces the native <select>.
+ * Closes on outside click and on Escape.
+ */
+function PunkDropdown<T extends string | number>({
+  value,
+  onChange,
+  options,
+  className = "",
+}: {
+  value: T;
+  onChange: (value: T) => void;
+  options: ReadonlyArray<{ value: T; label: string }>;
+  className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const selected = options.find((o) => o.value === value);
+
+  return (
+    <div ref={ref} className={`relative ${className}`}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full bg-white border-2 border-black px-2 py-1.5 text-xs font-mono font-bold text-black flex items-center justify-between gap-1 hover:bg-paper"
+      >
+        <span className="truncate">{selected?.label ?? "—"}</span>
+        <ChevronDown
+          className={`w-3 h-3 shrink-0 transition-transform ${open ? "rotate-180" : ""
+            }`}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute z-30 mt-1 w-full min-w-[10rem] bg-white border-2 border-black shadow-[3px_3px_0_0_var(--ink)]">
+          {options.map((opt) => (
+            <button
+              key={String(opt.value)}
+              type="button"
+              onClick={() => {
+                onChange(opt.value);
+                setOpen(false);
+              }}
+              className={`w-full text-left px-2 py-1.5 text-xs font-mono font-bold flex items-center justify-between gap-1 hover:bg-highlight ${opt.value === value ? "bg-paper" : ""
+                }`}
+            >
+              <span className="truncate">{opt.label}</span>
+              {opt.value === value && <Check className="w-3 h-3 shrink-0" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function CatSetupModal({
@@ -23,6 +104,10 @@ export default function CatSetupModal({
   onClose: () => void;
   onCatCreated?: (cat: any) => void;
 }) {
+  // -------- Hooks at top, unconditionally --------
+  const createCatMutation = useMutation(api.cats.createCat);
+  const createTaskMutation = useMutation(api.tasks.createTask);
+
   const [catName, setCatName] = useState("");
   const [routines, setRoutines] = useState<RoutineDraft[]>([
     { title: "Morning Feeding", type: "checkbox", frequency: 1 },
@@ -30,21 +115,14 @@ export default function CatSetupModal({
     { title: "Clean Litter Box", type: "checkbox", frequency: 1 },
   ]);
   const [newRoutineTitle, setNewRoutineTitle] = useState("");
-  const [newRoutineType, setNewRoutineType] = useState<"checkbox" | "counter">("checkbox");
-  const [newRoutineFreq, setNewRoutineFreq] = useState(1);
+  const [newRoutineType, setNewRoutineType] = useState<"checkbox" | "counter">(
+    "checkbox"
+  );
+  const [newRoutineFreq, setNewRoutineFreq] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  let createCatMutation: any = null;
-  let createTaskMutation: any = null;
-  try {
-    createCatMutation = useMutation(api.cats.createCat);
-    createTaskMutation = useMutation(api.tasks.createTask);
-  } catch {
-    // Dev fallback
-  }
-
-  if (!isOpen) return null;
-
+  // -------- Handlers --------
   const addRoutine = () => {
     if (!newRoutineTitle.trim()) return;
     setRoutines([
@@ -57,6 +135,7 @@ export default function CatSetupModal({
     ]);
     setNewRoutineTitle("");
     setNewRoutineFreq(1);
+    setNewRoutineType("checkbox");
   };
 
   const removeRoutine = (index: number) => {
@@ -68,170 +147,196 @@ export default function CatSetupModal({
     if (!catName.trim()) return;
 
     setIsSubmitting(true);
+    setError(null);
+
     try {
-      if (createCatMutation && householdId.startsWith("mock-") === false) {
-        const catId = await createCatMutation({
-          householdId: householdId as any,
-          name: catName.trim(),
+      // Always go through the real mutation. If it's not ready (shouldn't
+      // happen — useMutation returns a callable immediately), the call
+      // throws and we surface the error instead of silently mocking.
+      const catId = await createCatMutation({
+        householdId: householdId as any,
+        name: catName.trim(),
+      });
+
+      for (const routine of routines) {
+        await createTaskMutation({
+          catId,
+          title: routine.title,
+          type: routine.type,
+          frequency: routine.frequency,
         });
-
-        for (const routine of routines) {
-          await createTaskMutation({
-            catId,
-            title: routine.title,
-            type: routine.type,
-            frequency: routine.frequency,
-          });
-        }
-
-        if (onCatCreated) {
-          onCatCreated({
-            _id: catId,
-            name: catName.trim(),
-            tasks: routines,
-          });
-        }
-      } else {
-        const mockCat = {
-          _id: "cat-" + Date.now(),
-          name: catName.trim(),
-          tasks: routines.map((r, i) => ({
-            _id: `task-${Date.now()}-${i}`,
-            title: r.title,
-            type: r.type,
-            frequency: r.frequency,
-            done: false,
-          })),
-        };
-        if (onCatCreated) {
-          onCatCreated(mockCat);
-        }
       }
+
+      onCatCreated?.({
+        _id: catId,
+        name: catName.trim(),
+        tasks: routines,
+      });
+
+      // Reset form for next open
+      setCatName("");
+      setRoutines([
+        { title: "Morning Feeding", type: "checkbox", frequency: 1 },
+        { title: "Evening Wet Food", type: "checkbox", frequency: 1 },
+        { title: "Clean Litter Box", type: "checkbox", frequency: 1 },
+      ]);
       onClose();
     } catch (err: any) {
-      console.error("Error creating cat:", err);
+      setError(err?.message || "Could not create cat");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleBackdropClick = () => {
+    if (!isSubmitting) onClose();
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs overflow-y-auto">
-      <div className="relative w-full max-w-lg bg-paper border-4 border-black shadow-[10px_10px_0px_0px_var(--ink)] p-6 my-8">
-        <div className="flex justify-between items-center mb-3">
-          <ZineStaple />
-          <MaskingTape text="INTAKE FORM // FELINE UNIT" className="-rotate-1" />
+    <div
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 bg-black/75 backdrop-blur-xs overflow-y-auto"
+      onClick={handleBackdropClick}
+    >
+      <div
+        className="relative w-full max-w-lg bg-paper border-4 border-black shadow-[10px_10px_0px_0px_var(--ink)] p-5 sm:p-6 my-8"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4 pb-3 border-b-3 border-black">
+          <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-black">
+            New Cat
+          </h2>
           <button
             onClick={onClose}
-            className="w-7 h-7 bg-ink text-paper font-mono font-bold flex items-center justify-center hover:bg-accent transition-colors border-2 border-black"
+            disabled={isSubmitting}
+            className="w-7 h-7 bg-ink text-paper font-mono font-bold flex items-center justify-center hover:bg-accent transition-colors border-2 border-black disabled:opacity-50"
+            aria-label="Close"
           >
             ✕
           </button>
         </div>
 
-        <div className="border-b-3 border-black pb-3 mb-4">
-          <div className="flex items-center gap-2 mb-1">
-            <StampBadge text="NEW STRAY ENTRY" color="pink" />
-            <span className="text-[10px] font-mono font-bold uppercase text-ink-muted">
-              SQUAT ROSTER ADDITION
-            </span>
-          </div>
-          <h2 className="text-2xl font-black uppercase tracking-tight text-black">
-            REGISTER HOUSEHOLD CAT
-          </h2>
-        </div>
-
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Name */}
           <div>
-            <label className="block text-xs font-mono font-black uppercase text-black mb-1">
-              CAT NAME // STREET MONIKER:
+            <label className="block text-[10px] font-mono font-black uppercase text-ink-muted mb-1">
+              Cat Name
             </label>
             <input
               type="text"
               value={catName}
               onChange={(e) => setCatName(e.target.value)}
-              placeholder="e.g. Iggy Pop, Sid, Lucifer"
+              placeholder="e.g. Iggy"
               required
-              className="w-full bg-white border-3 border-black p-3 font-mono font-bold text-sm text-black uppercase focus:outline-none focus:bg-[#D9F5F1] focus:border-accent shadow-[2px_2px_0_0_var(--ink)]"
+              autoFocus
+              className="w-full bg-white border-3 border-black p-3 font-mono font-bold text-sm text-black focus:outline-none focus:border-accent"
             />
           </div>
 
+          {/* Routines list */}
           <div>
-            <label className="block text-xs font-mono font-black uppercase text-black mb-1 flex items-center justify-between">
-              <span>DAILY ROUTINES &amp; MEDS ({routines.length}):</span>
-              <span className="text-[10px] text-accent">RESETS AT MIDNIGHT</span>
-            </label>
-
-            <div className="space-y-2 mb-3 max-h-48 overflow-y-auto pr-1">
-              {routines.map((r, index) => (
-                <div
-                  key={index}
-                  className="bg-white border-2 border-black p-2.5 flex items-center justify-between text-xs font-mono shadow-[2px_2px_0_0_var(--ink)]"
-                >
-                  <div>
-                    <span className="font-bold text-black uppercase">{r.title}</span>
-                    <div className="text-[10px] text-ink-muted flex gap-2">
-                      <span className="uppercase">TYPE: {r.type}</span>
-                      <span>•</span>
-                      <span>FREQ: {r.frequency}x / DAY</span>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => removeRoutine(index)}
-                    className="text-red-600 hover:text-black p-1"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              ))}
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-[10px] font-mono font-black uppercase text-ink-muted">
+                Daily Routines ({routines.length})
+              </label>
+              <span className="text-[10px] font-mono text-ink-muted">
+                resets at midnight
+              </span>
             </div>
 
+            {routines.length > 0 && (
+              <div className="space-y-1.5 mb-3 max-h-48 overflow-y-auto pr-1">
+                {routines.map((r, index) => (
+                  <div
+                    key={index}
+                    className="bg-white border-2 border-black p-2.5 flex items-center justify-between gap-2 text-xs font-mono shadow-[2px_2px_0_0_var(--ink)]"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-bold text-black uppercase truncate">
+                        {r.title}
+                      </p>
+                      <p className="text-[10px] text-ink-muted">
+                        {r.type === "counter" ? "Counter" : "Checkbox"} ·{" "}
+                        {r.frequency}x/day
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeRoutine(index)}
+                      className="text-red-600 hover:text-black p-1 shrink-0"
+                      aria-label="Remove routine"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add routine */}
             <div className="bg-paper-card border-2 border-dashed border-black p-3 space-y-2">
-              <span className="text-[10px] font-mono font-bold uppercase text-black block">
-                + ADD CUSTOM CHORE / MEDICATION:
-              </span>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newRoutineTitle}
-                  onChange={(e) => setNewRoutineTitle(e.target.value)}
-                  placeholder="e.g. Insulin, Eye Drops..."
-                  className="flex-1 bg-white border-2 border-black p-1.5 text-xs font-mono font-bold uppercase focus:outline-none"
-                />
-                <select
-                  value={newRoutineType}
-                  onChange={(e) => setNewRoutineType(e.target.value as any)}
-                  className="bg-white border-2 border-black p-1.5 text-xs font-mono font-bold"
-                >
-                  <option value="checkbox">CHECKBOX</option>
-                  <option value="counter">COUNTER</option>
-                </select>
+              <input
+                type="text"
+                value={newRoutineTitle}
+                onChange={(e) => setNewRoutineTitle(e.target.value)}
+                placeholder="Add a chore or medication…"
+                className="w-full bg-white border-2 border-black p-2 text-xs font-mono font-bold focus:outline-none focus:border-accent"
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                <div className="sm:col-span-7">
+                  <PunkDropdown
+                    value={newRoutineType}
+                    onChange={(v) => setNewRoutineType(v)}
+                    options={TASK_TYPES}
+                  />
+                </div>
+                <div className="sm:col-span-3">
+                  <PunkDropdown
+                    value={newRoutineFreq}
+                    onChange={(v) => setNewRoutineFreq(v)}
+                    options={FREQUENCIES.map((f) => ({
+                      value: f,
+                      label: `${f}x`,
+                    }))}
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={addRoutine}
-                  className="punk-button bg-highlight text-black px-3 py-1 text-xs font-black"
+                  disabled={!newRoutineTitle.trim()}
+                  className="sm:col-span-2 punk-button bg-highlight text-black px-3 py-1.5 text-xs font-black flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  ADD
+                  <Plus className="w-3.5 h-3.5" />
+                  Add
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="pt-2 flex gap-3">
+          {error && (
+            <div className="p-2 border-2 border-black bg-accent text-white text-xs font-mono font-bold">
+              {error}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="punk-button bg-white text-black py-3 px-4 text-xs flex-1"
+              disabled={isSubmitting}
+              className="punk-button flex-1 bg-white text-black py-2.5 px-4 text-xs font-bold disabled:opacity-50"
             >
-              CANCEL
+              Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || !catName.trim()}
-              className="punk-button bg-ink text-paper py-3 px-4 text-xs font-black flex-2 hover:bg-accent hover:text-white"
+              className="punk-button flex-1 bg-ink text-paper py-2.5 px-4 text-xs font-black hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? "STAMPING ENTRY..." : "CREATE FELINE PROFILE ➔"}
+              {isSubmitting ? "Saving…" : "Create Cat"}
             </button>
           </div>
         </form>

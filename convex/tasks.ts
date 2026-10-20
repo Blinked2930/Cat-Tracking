@@ -54,7 +54,8 @@ export const getByCat = query({
 });
 
 /**
- * Record a chore completion event by a roommate.
+ * Record a chore completion event by a roommate. Snapshots the user's current
+ * display name so later renames don't rewrite historical logs.
  */
 export const logTask = mutation({
   args: {
@@ -81,7 +82,6 @@ export const logTask = mutation({
       throw new Error("Must be logged in to log tasks");
     }
 
-    // Find the user record
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", clerkId))
@@ -91,11 +91,11 @@ export const logTask = mutation({
       throw new Error("User record not found. Sync user first.");
     }
 
-    // Insert task log
     const logId = await ctx.db.insert("taskLogs", {
       taskId: args.taskId,
       catId: args.catId,
       userId: user._id,
+      userNameSnapshot: user.name,
       completedAt: Date.now(),
       dateString: args.dateString,
       value: args.value,
@@ -119,7 +119,8 @@ export const unlogTask = mutation({
 });
 
 /**
- * Fetch today's completed logs for a cat with roommate names.
+ * Fetch today's completed logs for a cat with roommate names. Prefers the
+ * snapshot taken at log-time over the user's current name.
  */
 export const getDailyLogs = query({
   args: { catId: v.id("cats"), dateString: v.string() },
@@ -134,16 +135,13 @@ export const getDailyLogs = query({
       )
       .collect();
 
-    // Enrich logs with user details and task title.
-    // Note: log.userId is Id<"users"> and log.taskId is Id<"tasks">, so
-    // ctx.db.get() returns the correct narrowed type — no `any` needed.
     const enrichedLogs = await Promise.all(
       rawLogs.map(async (log) => {
         const user = await ctx.db.get(log.userId);
         const task = await ctx.db.get(log.taskId);
         return {
           ...log,
-          userName: user?.name || "Roommate",
+          userName: log.userNameSnapshot || user?.name || "Roommate",
           taskTitle: task?.title || "Daily Routine",
         };
       })
@@ -163,7 +161,6 @@ export const getRecentHouseholdActivity = query({
   handler: async (ctx: QueryCtx, args: { householdId?: Id<"households"> }) => {
     if (!args.householdId) return [];
 
-    // Find all cats in this household
     const cats = await ctx.db
       .query("cats")
       .withIndex("by_household", (q) =>
@@ -175,8 +172,6 @@ export const getRecentHouseholdActivity = query({
 
     const catMap = new Map(cats.map((c) => [c._id.toString(), c.name]));
 
-    // Pull recent logs per cat (up to 25 across the household) instead of
-    // scanning the global taskLogs table.
     const perCatLogs = await Promise.all(
       cats.map((cat) =>
         ctx.db
@@ -192,7 +187,6 @@ export const getRecentHouseholdActivity = query({
       .sort((a, b) => b.completedAt - a.completedAt)
       .slice(0, 25);
 
-    // Enrich with user and task info
     const enriched = await Promise.all(
       householdLogs.map(async (log) => {
         const user = await ctx.db.get(log.userId);
@@ -202,7 +196,7 @@ export const getRecentHouseholdActivity = query({
           completedAt: log.completedAt,
           catName: catMap.get(log.catId.toString()) || "Cat",
           taskTitle: task?.title || "Daily Chore",
-          userName: user?.name || "Roommate",
+          userName: log.userNameSnapshot || user?.name || "Roommate",
         };
       })
     );
@@ -212,9 +206,7 @@ export const getRecentHouseholdActivity = query({
 });
 
 /**
- * Aggregated query for the main dashboard:
- * Fetches all cats in the household, their daily tasks, today's completed logs,
- * and calculates the exact completion percentage for each cat.
+ * Aggregated query for the main dashboard.
  */
 export const getDashboardData = query({
   args: {
@@ -230,7 +222,6 @@ export const getDashboardData = query({
     const household = await ctx.db.get(args.householdId);
     if (!household) return null;
 
-    // 1. Fetch cats for this household
     const cats = await ctx.db
       .query("cats")
       .withIndex("by_household", (q) =>
@@ -238,7 +229,6 @@ export const getDashboardData = query({
       )
       .collect();
 
-    // 2. For each cat, fetch tasks and today's logs
     const catsData = await Promise.all(
       cats.map(async (cat) => {
         const tasks = await ctx.db
@@ -253,33 +243,28 @@ export const getDashboardData = query({
           )
           .collect();
 
-        // Enrich logs with user names
         const enrichedLogs = await Promise.all(
           rawLogs.map(async (log) => {
             const user = await ctx.db.get(log.userId);
             return {
               ...log,
-              userName: user?.name || "Roommate",
+              userName: log.userNameSnapshot || user?.name || "Roommate",
             };
           })
         );
 
-        // Calculate total required chore count
         const totalFrequency = tasks.reduce(
           (acc, t) => acc + Math.max(1, t.frequency || 1),
           0
         );
 
-        // Calculate completed count
         const completedCount = rawLogs.length;
 
-        // Completion percentage (0 to 100)
         const completionPercentage =
           totalFrequency > 0
             ? Math.min(100, Math.round((completedCount / totalFrequency) * 100))
             : 0;
 
-        // Map task items with completion status
         const tasksWithStatus = tasks.map((task) => {
           const taskLogs = enrichedLogs.filter(
             (l) => l.taskId.toString() === task._id.toString()

@@ -32,6 +32,7 @@ export default defineSchema({
     taskId: v.id("tasks"),
     catId: v.id("cats"),
     userId: v.id("users"),
+    userNameSnapshot: v.optional(v.string()),
     completedAt: v.number(),
     dateString: v.string(),
     value: v.optional(v.number()),

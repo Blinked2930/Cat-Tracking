@@ -147,7 +147,7 @@ export default function OnboardingFlow({
   }
 
   return (
-    <div className="w-full bg-[#A7A6A2] border-4 border-[#0d0d0d] shadow-[6px_6px_0px_0px_#0d0d0d] p-6 sm:p-8">
+    <div className="w-full bg-[#D9D8D3] border-4 border-[#0d0d0d] shadow-[6px_6px_0px_0px_#0d0d0d] p-6 sm:p-8">
       <div className="border-b-3 border-black pb-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black">
@@ -197,7 +197,7 @@ export default function OnboardingFlow({
               {currentHousehold.name}
             </h3>
 
-            <div className="bg-[#A7A6A2] border-2 border-black p-3 flex items-center justify-between gap-3 mb-4">
+            <div className="bg-[#D9D8D3] border-2 border-black p-3 flex items-center justify-between gap-3 mb-4">
               <div>
                 <span className="text-[10px] font-mono text-[#666] uppercase block">
                   ROOMMATE INVITE CODE
@@ -230,7 +230,7 @@ export default function OnboardingFlow({
                   });
                 }
               }}
-              className="punk-button w-full bg-black text-[#A7A6A2] py-3 text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#A01AB1]"
+              className="punk-button w-full bg-black text-[#D9D8D3] py-3 text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#A01AB1]"
             >
               <span>OPEN DASHBOARD</span>
               <ArrowRight className="w-4 h-4" />
@@ -247,7 +247,7 @@ export default function OnboardingFlow({
                 setStatusMessage(null);
               }}
               className={`punk-button py-2.5 px-3 text-xs font-bold transition-all ${activeTab === "create"
-                ? "bg-black text-[#A7A6A2] shadow-[3px_3px_0px_0px_#A01AB1]"
+                ? "bg-black text-[#D9D8D3] shadow-[3px_3px_0px_0px_#A01AB1]"
                 : "bg-white text-black hover:bg-zinc-100"
                 }`}
             >
@@ -261,7 +261,7 @@ export default function OnboardingFlow({
                 setStatusMessage(null);
               }}
               className={`punk-button py-2.5 px-3 text-xs font-bold transition-all ${activeTab === "join"
-                ? "bg-black text-[#A7A6A2] shadow-[3px_3px_0px_0px_#3FD6CA]"
+                ? "bg-black text-[#D9D8D3] shadow-[3px_3px_0px_0px_#3FD6CA]"
                 : "bg-white text-black hover:bg-zinc-100"
                 }`}
             >

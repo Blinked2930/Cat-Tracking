@@ -124,7 +124,7 @@ export default function CatDetailModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs overflow-y-auto">
       {/* Modal Container */}
-      <div className="relative w-full max-w-2xl bg-[#A7A6A2] border-4 border-black shadow-[8px_8px_0px_0px_#0d0d0d] p-6 my-6">
+      <div className="relative w-full max-w-2xl bg-[#D9D8D3] border-4 border-black shadow-[8px_8px_0px_0px_#0d0d0d] p-6 my-6">
         {/* Header */}
         <div className="flex items-center justify-between border-b-3 border-black pb-3 mb-5">
           <div className="flex items-center gap-3">
@@ -138,7 +138,7 @@ export default function CatDetailModal({
 
           <button
             onClick={onClose}
-            className="w-8 h-8 bg-black text-[#A7A6A2] font-mono font-bold flex items-center justify-center hover:bg-[#A01AB1] transition-colors border-2 border-black"
+            className="w-8 h-8 bg-black text-[#D9D8D3] font-mono font-bold flex items-center justify-center hover:bg-[#A01AB1] transition-colors border-2 border-black"
           >
             ✕
           </button>
@@ -147,7 +147,7 @@ export default function CatDetailModal({
         {/* Top Grid: Silhouette + Tasks */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-6">
           {/* Left: Mini Silhouette */}
-          <div className="md:col-span-5 bg-[#B5B4B0] border-2 border-black p-4 flex flex-col items-center justify-center">
+          <div className="md:col-span-5 bg-[#E6E5E1] border-2 border-black p-4 flex flex-col items-center justify-center">
             <div className="w-full max-w-[170px]">
               <JaggedCatSilhouette
                 catName={cat.name}
@@ -173,8 +173,8 @@ export default function CatDetailModal({
                     key={task._id}
                     onClick={() => handleTaskClick(task)}
                     className={`cursor-pointer border-2 border-black p-2.5 transition-all select-none ${task.isDone
-                      ? "bg-[#A7A6A2] text-[#777]"
-                      : "bg-white text-black hover:border-black shadow-[2px_2px_0_0_#000]"
+                        ? "bg-[#D9D8D3] text-[#777]"
+                        : "bg-white text-black hover:border-black shadow-[2px_2px_0_0_#000]"
                       }`}
                   >
                     <div className="flex items-center justify-between gap-2.5">
@@ -226,7 +226,7 @@ export default function CatDetailModal({
         </div>
 
         {/* Activity Feed for this Cat */}
-        <div className="bg-[#B5B4B0] border-2 border-black p-4">
+        <div className="bg-[#E6E5E1] border-2 border-black p-4">
           <div className="flex items-center justify-between border-b border-black/20 pb-1.5 mb-2.5 font-mono text-xs">
             <span className="font-bold uppercase text-black flex items-center gap-1.5">
               <Clock className="w-3 h-3 text-[#A01AB1]" />

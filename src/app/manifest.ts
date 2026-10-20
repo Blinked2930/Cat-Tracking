@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "A gritty, punk-sketch real-time cat care tracker for roommates.",
     start_url: "/",
     display: "standalone",
-    background_color: "#A7A6A2",
+    background_color: "#D9D8D3",
     theme_color: "#0a0a0a",
     orientation: "portrait-primary",
     icons: [

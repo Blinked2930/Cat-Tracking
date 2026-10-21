@@ -7,7 +7,7 @@ import JaggedCatSilhouette from "./JaggedCatSilhouette";
 import CatSetupModal from "./CatSetupModal";
 import CatDetailModal from "./CatDetailModal";
 import { formatTime } from "@/lib/formatTime";
-import { Check, Plus, ExternalLink } from "lucide-react";
+import { Check, Plus, ExternalLink, AlertTriangle, LogOut } from "lucide-react";
 
 interface TaskItem {
   _id: string;
@@ -43,11 +43,13 @@ export default function CatDashboard({
   householdName,
   inviteCode,
   userName = "Roommate",
+  onRequestLeave,
 }: {
   householdId: string;
   householdName: string;
   inviteCode: string;
   userName?: string;
+  onRequestLeave?: () => void;
 }) {
   const [isAddCatOpen, setIsAddCatOpen] = useState(false);
   const [selectedCatForDetail, setSelectedCatForDetail] =
@@ -239,6 +241,36 @@ export default function CatDashboard({
           </div>
         ))}
       </div>
+
+      {/* Danger Zone — leave household, tucked below the grid */}
+      {onRequestLeave && (
+        <div className="pt-4 border-t-2 border-black/20">
+          <div className="bg-white border-3 border-black p-4 sm:p-5 shadow-[4px_4px_0_0_var(--ink)]">
+            <div className="flex items-start gap-3 mb-3">
+              <div className="w-8 h-8 bg-accent text-white flex items-center justify-center border-2 border-black shrink-0">
+                <AlertTriangle className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-mono font-black uppercase text-black text-sm">
+                  Danger Zone
+                </h3>
+                <p className="text-[11px] font-mono text-ink-muted mt-0.5">
+                  Leaving removes you from this household. Cat-care history stays
+                  with the crew.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={onRequestLeave}
+              className="punk-button w-full sm:w-auto bg-white text-accent border-[#A01AB1] py-2 px-4 text-xs font-bold flex items-center justify-center sm:justify-start gap-1.5 hover:bg-accent hover:text-white"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Leave Household</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {selectedCatForDetail && (
         <CatDetailModal

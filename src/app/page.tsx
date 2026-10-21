@@ -5,7 +5,6 @@ import { useUser, UserButton } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import OnboardingFlow from "@/components/OnboardingFlow";
-import HouseholdSetupFlow from "@/components/HouseholdSetupFlow";
 import CatDashboard from "@/components/CatDashboard";
 import DisplayNameDropdown from "@/components/DisplayNameDropdown";
 import MobileNav from "@/components/MobileNav";
@@ -13,7 +12,6 @@ import InstallAppModal from "@/components/InstallAppModal";
 import {
   LayoutDashboard,
   FileText,
-  Settings,
   LogOut,
   AlertTriangle,
   Download,
@@ -30,7 +28,7 @@ export default function Home() {
   const leaveHouseholdMutation = useMutation(api.households.leaveHousehold);
 
   const [activeView, setActiveView] = useState<
-    "onboarding" | "setup" | "dashboard"
+    "onboarding" | "dashboard"
   >("onboarding");
   const [activeHousehold, setActiveHousehold] =
     useState<ActiveHousehold | null>(null);
@@ -55,7 +53,7 @@ export default function Home() {
         name: household.name,
         inviteCode: household.inviteCode,
       });
-      setActiveView((v) => (v === "setup" ? "setup" : "dashboard"));
+      setActiveView("dashboard");
     } else {
       setActiveHousehold(null);
       setActiveView("onboarding");
@@ -110,14 +108,6 @@ export default function Home() {
       icon: <LayoutDashboard className="w-3.5 h-3.5" />,
       onClick: goToDashboard,
       active: activeView === "dashboard",
-      disabled: !activeHousehold,
-    },
-    {
-      key: "setup",
-      label: "Setup",
-      icon: <Settings className="w-3.5 h-3.5" />,
-      onClick: () => activeHousehold && setActiveView("setup"),
-      active: activeView === "setup",
       disabled: !activeHousehold,
     },
     ...(activeHousehold
@@ -187,53 +177,6 @@ export default function Home() {
           </section>
         )}
 
-        {activeView === "setup" && activeHousehold && (
-          <section className="space-y-8">
-            <HouseholdSetupFlow
-              householdId={activeHousehold.id}
-              householdName={activeHousehold.name}
-              inviteCode={activeHousehold.inviteCode}
-              onComplete={() => {
-                setActiveView("dashboard");
-              }}
-            />
-
-            <div className="max-w-3xl mx-auto">
-              <div className="border-3 border-black bg-white p-4 sm:p-5 shadow-[4px_4px_0_0_var(--ink)]">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="w-8 h-8 bg-accent text-white flex items-center justify-center border-2 border-black shrink-0">
-                    <AlertTriangle className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="font-mono font-black uppercase text-black text-sm">
-                      Danger Zone
-                    </h3>
-                    <p className="text-[11px] font-mono text-ink-muted mt-0.5">
-                      Leaving removes you from this household. Cat-care history
-                      stays with the crew.
-                    </p>
-                  </div>
-                </div>
-
-                {leaveError && (
-                  <div className="mb-3 p-2 border-2 border-black bg-accent text-white text-xs font-mono font-bold">
-                    {leaveError}
-                  </div>
-                )}
-
-                <button
-                  onClick={() => setShowLeaveConfirm(true)}
-                  disabled={isLeaving}
-                  className="punk-button w-full sm:w-auto bg-white text-accent border-[#A01AB1] py-2 px-4 text-xs font-bold flex items-center justify-center sm:justify-start gap-1.5 hover:bg-accent hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>Leave Household</span>
-                </button>
-              </div>
-            </div>
-          </section>
-        )}
-
         {activeView === "dashboard" && activeHousehold && (
           <section>
             <CatDashboard
@@ -241,6 +184,7 @@ export default function Home() {
               householdName={activeHousehold.name}
               inviteCode={activeHousehold.inviteCode}
               userName={currentUserData?.name || "Roommate"}
+              onRequestLeave={() => setShowLeaveConfirm(true)}
             />
           </section>
         )}
@@ -292,6 +236,12 @@ export default function Home() {
               You&apos;ll lose access to this household until someone re-invites
               you with the code. Your past cat-care logs stay with the crew.
             </p>
+
+            {leaveError && (
+              <div className="mb-3 p-2 border-2 border-black bg-accent text-white text-xs font-mono font-bold">
+                {leaveError}
+              </div>
+            )}
 
             <div className="flex flex-col sm:flex-row gap-3">
               <button

@@ -47,7 +47,6 @@ export default function CatDetailModal({
   todayString,
   onToggleTask,
 }: CatDetailModalProps) {
-  // Hooks unconditional at top.
   const isMock = !cat || cat._id.startsWith("cat-");
   const liveLogs = useQuery(
     api.tasks.getDailyLogs,
@@ -102,15 +101,14 @@ export default function CatDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 bg-black/75 backdrop-blur-xs overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs overflow-y-auto"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-2xl bg-paper border-4 border-black shadow-[8px_8px_0px_0px_var(--ink)] p-5 sm:p-6 my-6"
+        className="relative w-full max-w-2xl bg-paper border-4 border-black shadow-[8px_8px_0px_0px_var(--ink)] p-4 sm:p-6 my-4 sm:my-6"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b-3 border-black pb-3 mb-5 gap-2">
+        <div className="flex items-center justify-between border-b-3 border-black pb-3 mb-4 sm:mb-5 gap-2">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <h2 className="text-xl sm:text-3xl font-black uppercase tracking-tight text-black truncate">
               {cat.name}
@@ -128,10 +126,9 @@ export default function CatDetailModal({
           </button>
         </div>
 
-        {/* Silhouette + tasks */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-6">
-          <div className="md:col-span-5 bg-paper-card border-2 border-black p-4 flex flex-col items-center justify-center">
-            <div className="w-full max-w-[170px]">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 mb-4 sm:mb-6">
+          <div className="md:col-span-5 bg-paper-card border-2 border-black p-3 sm:p-4 flex flex-col items-center justify-center">
+            <div className="w-full max-w-[150px] sm:max-w-[170px]">
               <JaggedCatSilhouette
                 catName={cat.name}
                 completionPercentage={cat.completionPercentage}
@@ -148,12 +145,10 @@ export default function CatDetailModal({
                 <span className="font-bold uppercase text-black">
                   Today&apos;s Tasks
                 </span>
-                <span className="text-[10px] text-ink-muted">
-                  tap to log
-                </span>
+                <span className="text-[10px] text-ink-muted">tap to log</span>
               </div>
 
-              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+              <div className="space-y-2">
                 {cat.tasks.map((task) => {
                   const completed = task.completedCount || 0;
                   const isCounter = task.type === "counter";
@@ -164,7 +159,7 @@ export default function CatDetailModal({
                     <div
                       key={task._id}
                       onClick={() => handleTaskClick(task)}
-                      className={`cursor-pointer border-2 border-black p-2.5 transition-all select-none ${task.isDone
+                      className={`cursor-pointer border-2 border-black p-2.5 transition-all select-none min-h-[44px] ${task.isDone
                           ? "bg-paper text-ink-muted"
                           : started
                             ? "bg-highlight/20 shadow-[2px_2px_0_0_var(--ink)]"
@@ -233,8 +228,8 @@ export default function CatDetailModal({
           </div>
         </div>
 
-        {/* Activity feed */}
-        <div className="bg-paper-card border-2 border-black p-4">
+        {/* Activity feed — no max-height, the whole modal scrolls instead */}
+        <div className="bg-paper-card border-2 border-black p-3 sm:p-4">
           <div className="flex items-center justify-between border-b border-black/20 pb-1.5 mb-2.5 font-mono text-xs">
             <span className="font-bold uppercase text-black flex items-center gap-1.5">
               <Clock className="w-3 h-3 text-accent" />
@@ -246,7 +241,7 @@ export default function CatDetailModal({
           </div>
 
           {timelineLogs.length > 0 ? (
-            <div className="font-mono text-xs space-y-1.5 max-h-36 overflow-y-auto">
+            <div className="font-mono text-xs space-y-1.5">
               {timelineLogs.map((log, idx) => (
                 <div
                   key={`${log.id}-${idx}`}

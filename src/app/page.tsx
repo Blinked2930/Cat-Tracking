@@ -8,6 +8,7 @@ import OnboardingFlow from "@/components/OnboardingFlow";
 import HouseholdSetupFlow from "@/components/HouseholdSetupFlow";
 import CatDashboard from "@/components/CatDashboard";
 import DisplayNameDropdown from "@/components/DisplayNameDropdown";
+import MobileNav from "@/components/MobileNav";
 import {
   LayoutDashboard,
   FileText,
@@ -99,70 +100,80 @@ export default function Home() {
     );
   }
 
+  const navItems = [
+    {
+      key: "dashboard",
+      label: "Dashboard",
+      icon: <LayoutDashboard className="w-3.5 h-3.5" />,
+      onClick: goToDashboard,
+      active: activeView === "dashboard",
+      disabled: !activeHousehold,
+    },
+    {
+      key: "setup",
+      label: "Setup",
+      icon: <Settings className="w-3.5 h-3.5" />,
+      onClick: () => activeHousehold && setActiveView("setup"),
+      active: activeView === "setup",
+      disabled: !activeHousehold,
+    },
+    ...(activeHousehold
+      ? []
+      : [
+        {
+          key: "join",
+          label: "Join",
+          icon: <FileText className="w-3.5 h-3.5" />,
+          onClick: () => setActiveView("onboarding"),
+          active: activeView === "onboarding",
+        },
+      ]),
+  ];
+
   return (
     <div className="min-h-screen bg-paper text-ink flex flex-col justify-between selection:bg-accent selection:text-white pb-8">
       <header className="w-full bg-ink text-paper border-b-4 border-black py-3 px-4 sm:px-8">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 font-mono">
-          <div className="flex items-center gap-2.5">
-            <span className="w-7 h-7 bg-accent text-white flex items-center justify-center font-black text-sm border-2 border-white shadow-[2px_2px_0_0_var(--highlight)]">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-3 font-mono">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="w-7 h-7 bg-accent text-white flex items-center justify-center font-black text-sm border-2 border-white shadow-[2px_2px_0_0_var(--highlight)] shrink-0">
               🐾
             </span>
-            <span className="font-black tracking-tight text-lg uppercase text-white">
+            <span className="font-black tracking-tight text-lg uppercase text-white truncate">
               STRAYSYNC
             </span>
           </div>
 
-          <nav className="flex items-center gap-1.5 text-xs">
-            <button
-              onClick={goToDashboard}
-              disabled={!activeHousehold}
-              className={`px-3 py-1 font-bold border-2 transition-all flex items-center gap-1.5 ${activeView === "dashboard"
-                  ? "bg-highlight text-black border-black shadow-[2px_2px_0_0_var(--accent)]"
-                  : "bg-black text-paper border-transparent hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
-                }`}
-            >
-              <LayoutDashboard className="w-3.5 h-3.5" />
-              <span>DASHBOARD</span>
-            </button>
-
-            <button
-              onClick={() => activeHousehold && setActiveView("setup")}
-              disabled={!activeHousehold}
-              className={`px-3 py-1 font-bold border-2 transition-all flex items-center gap-1.5 ${activeView === "setup"
-                  ? "bg-highlight text-black border-black shadow-[2px_2px_0_0_var(--accent)]"
-                  : "bg-black text-paper border-transparent hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
-                }`}
-            >
-              <Settings className="w-3.5 h-3.5" />
-              <span>SETUP</span>
-            </button>
-
-            {!activeHousehold && (
+          {/* Desktop nav — hidden below md */}
+          <nav className="hidden md:flex items-center gap-1.5 text-xs">
+            {navItems.map((item) => (
               <button
-                onClick={() => setActiveView("onboarding")}
-                className={`px-3 py-1 font-bold border-2 transition-all flex items-center gap-1.5 ${activeView === "onboarding"
+                key={item.key}
+                onClick={item.onClick}
+                disabled={item.disabled}
+                className={`px-3 py-1 font-bold border-2 transition-all flex items-center gap-1.5 ${item.active
                     ? "bg-highlight text-black border-black shadow-[2px_2px_0_0_var(--accent)]"
-                    : "bg-black text-paper border-transparent hover:border-zinc-700"
+                    : "bg-black text-paper border-transparent hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
                   }`}
               >
-                <FileText className="w-3.5 h-3.5" />
-                <span>JOIN</span>
+                {item.icon}
+                <span>{item.label.toUpperCase()}</span>
               </button>
-            )}
+            ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {clerkUser && (
               <>
                 <DisplayNameDropdown />
                 <UserButton />
+                <MobileNav items={navItems} />
               </>
             )}
           </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8">
         {activeView === "onboarding" && (
           <section className="max-w-xl mx-auto">
             <OnboardingFlow
@@ -186,7 +197,7 @@ export default function Home() {
             />
 
             <div className="max-w-3xl mx-auto">
-              <div className="border-3 border-black bg-white p-5 shadow-[4px_4px_0_0_var(--ink)]">
+              <div className="border-3 border-black bg-white p-4 sm:p-5 shadow-[4px_4px_0_0_var(--ink)]">
                 <div className="flex items-start gap-3 mb-3">
                   <div className="w-8 h-8 bg-accent text-white flex items-center justify-center border-2 border-black shrink-0">
                     <AlertTriangle className="w-4 h-4" />
@@ -211,7 +222,7 @@ export default function Home() {
                 <button
                   onClick={() => setShowLeaveConfirm(true)}
                   disabled={isLeaving}
-                  className="punk-button bg-white text-accent border-[#A01AB1] py-2 px-4 text-xs font-bold flex items-center gap-1.5 hover:bg-accent hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="punk-button w-full sm:w-auto bg-white text-accent border-[#A01AB1] py-2 px-4 text-xs font-bold flex items-center justify-center sm:justify-start gap-1.5 hover:bg-accent hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   <span>Leave Household</span>
@@ -254,7 +265,7 @@ export default function Home() {
           onClick={() => !isLeaving && setShowLeaveConfirm(false)}
         >
           <div
-            className="relative w-full max-w-md bg-paper border-4 border-black shadow-[8px_8px_0px_0px_var(--ink)] p-6"
+            className="relative w-full max-w-md bg-paper border-4 border-black shadow-[8px_8px_0px_0px_var(--ink)] p-5 sm:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-4">

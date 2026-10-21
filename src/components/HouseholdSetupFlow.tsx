@@ -302,7 +302,7 @@ export default function HouseholdSetupFlow({
           .map((t) => ({
             title: t.title.trim(),
             type: t.type,
-            frequency: t.frequency,
+            frequency: t.type === "checkbox" ? 1 : t.frequency,
             config: t.configJson.trim()
               ? JSON.parse(t.configJson.trim())
               : undefined,
@@ -509,6 +509,7 @@ export default function HouseholdSetupFlow({
                             onClick={() =>
                               handleUpdateTask(cat.id, task.id, {
                                 type: "checkbox",
+                                frequency: 1,
                               })
                             }
                             className={`px-2 py-1 font-bold ${task.type === "checkbox"
@@ -534,19 +535,21 @@ export default function HouseholdSetupFlow({
                           </button>
                         </div>
 
-                        <PunkDropdown
-                          value={task.frequency}
-                          onChange={(v) =>
-                            handleUpdateTask(cat.id, task.id, {
-                              frequency: v,
-                            })
-                          }
-                          options={FREQUENCY_OPTIONS.map((f) => ({
-                            value: f,
-                            label: `${f}x / day`,
-                          }))}
-                          className="w-28"
-                        />
+                        {task.type === "counter" && (
+                          <PunkDropdown
+                            value={task.frequency}
+                            onChange={(v) =>
+                              handleUpdateTask(cat.id, task.id, {
+                                frequency: v,
+                              })
+                            }
+                            options={FREQUENCY_OPTIONS.map((f) => ({
+                              value: f,
+                              label: `${f}x / day`,
+                            }))}
+                            className="w-28"
+                          />
+                        )}
 
                         <button
                           type="button"

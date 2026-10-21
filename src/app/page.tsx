@@ -9,12 +9,14 @@ import HouseholdSetupFlow from "@/components/HouseholdSetupFlow";
 import CatDashboard from "@/components/CatDashboard";
 import DisplayNameDropdown from "@/components/DisplayNameDropdown";
 import MobileNav from "@/components/MobileNav";
+import InstallAppModal from "@/components/InstallAppModal";
 import {
   LayoutDashboard,
   FileText,
   Settings,
   LogOut,
   AlertTriangle,
+  Download,
 } from "lucide-react";
 
 interface ActiveHousehold {
@@ -35,6 +37,7 @@ export default function Home() {
   const [isLeaving, setIsLeaving] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [leaveError, setLeaveError] = useState<string | null>(null);
+  const [showInstallModal, setShowInstallModal] = useState(false);
 
   const currentUserData = useQuery(
     api.users.currentUser,
@@ -143,7 +146,6 @@ export default function Home() {
             </span>
           </div>
 
-          {/* Desktop nav — hidden below md */}
           <nav className="hidden md:flex items-center gap-1.5 text-xs">
             {navItems.map((item) => (
               <button
@@ -253,10 +255,19 @@ export default function Home() {
         )}
       </main>
 
-      <footer className="w-full border-t-2 border-black/20 pt-4 px-4 text-center">
-        <p className="text-[11px] font-mono font-bold text-ink-muted uppercase tracking-wide">
-          STRAYSYNC • REAL-TIME CAT CARE FOR ROOMMATES
-        </p>
+      <footer className="w-full border-t-2 border-black/20 pt-4 px-4">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p className="text-[11px] font-mono font-bold text-ink-muted uppercase tracking-wide text-center sm:text-left">
+            STRAYSYNC • REAL-TIME CAT CARE FOR ROOMMATES
+          </p>
+          <button
+            onClick={() => setShowInstallModal(true)}
+            className="text-[11px] font-mono font-bold uppercase text-ink-muted hover:text-black flex items-center gap-1"
+          >
+            <Download className="w-3 h-3" />
+            Install App
+          </button>
+        </div>
       </footer>
 
       {showLeaveConfirm && (
@@ -301,6 +312,11 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      <InstallAppModal
+        isOpen={showInstallModal}
+        onClose={() => setShowInstallModal(false)}
+      />
     </div>
   );
 }

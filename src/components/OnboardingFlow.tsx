@@ -4,11 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useUser, UserButton, SignInButton } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import {
-  Copy,
-  Check,
-  ArrowRight,
-} from "lucide-react";
+import { Copy, Check, ArrowRight } from "lucide-react";
 
 export default function OnboardingFlow({
   onEnterDashboard,
@@ -137,9 +133,7 @@ export default function OnboardingFlow({
   };
 
   if (!isClerkLoaded) {
-    return (
-      <div className="p-6 font-mono text-sm text-ink-muted">Loading…</div>
-    );
+    return <div className="p-6 font-mono text-sm text-ink-muted">Loading…</div>;
   }
 
   return (
@@ -164,7 +158,7 @@ export default function OnboardingFlow({
           ) : (
             <SignInButton mode="modal">
               <button className="punk-button bg-highlight text-black px-3 py-1 text-xs font-bold border-2 border-black shadow-[2px_2px_0_0_var(--accent)]">
-                SIGN IN
+                SIGN UP / SIGN IN
               </button>
             </SignInButton>
           )}

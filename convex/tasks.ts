@@ -2,15 +2,12 @@ import { mutation, query, MutationCtx, QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 
-/**
- * Configure a new daily routine / task for a specific cat.
- */
 export const createTask = mutation({
   args: {
     catId: v.id("cats"),
     title: v.string(),
-    type: v.string(), // "checkbox" | "counter"
-    frequency: v.number(), // times per day (e.g. 1, 2)
+    type: v.string(),
+    frequency: v.number(),
     config: v.optional(v.any()),
   },
   handler: async (
@@ -40,9 +37,83 @@ export const createTask = mutation({
   },
 });
 
-/**
- * Fetch all tasks configured for a cat.
- */
+export const updateTask = mutation({
+  args: {
+    taskId: v.id("tasks"),
+    title: v.optional(v.string()),
+    type: v.optional(v.string()),
+    frequency: v.optional(v.number()),
+    config: v.optional(v.any()),
+    clearConfig: v.optional(v.boolean()),
+  },
+  handler: async (
+    ctx: MutationCtx,
+    args: {
+      taskId: Id<"tasks">;
+      title?: string;
+      type?: string;
+      frequency?: number;
+      config?: any;
+      clearConfig?: boolean;
+    }
+  ) => {
+    const task = await ctx.db.get(args.taskId);
+    if (!task) throw new Error("Task not found");
+
+    const patch: Record<string, any> = {};
+
+    if (args.title !== undefined) {
+      const trimmed = args.title.trim();
+      if (!trimmed) throw new Error("Task title cannot be empty");
+      patch.title = trimmed;
+    }
+
+    if (args.type !== undefined) {
+      patch.type = args.type;
+      // Checkboxes are always frequency 1
+      if (args.type === "checkbox") {
+        patch.frequency = 1;
+      }
+    }
+
+    if (args.frequency !== undefined && patch.type !== "checkbox") {
+      patch.frequency = Math.max(1, args.frequency);
+    }
+
+    if (args.clearConfig) {
+      patch.config = undefined;
+    } else if (args.config !== undefined) {
+      patch.config = args.config;
+    }
+
+    if (Object.keys(patch).length > 0) {
+      await ctx.db.patch(args.taskId, patch);
+    }
+
+    return { success: true };
+  },
+});
+
+export const deleteTask = mutation({
+  args: { taskId: v.id("tasks") },
+  handler: async (ctx: MutationCtx, args: { taskId: Id<"tasks"> }) => {
+    const task = await ctx.db.get(args.taskId);
+    if (!task) throw new Error("Task not found");
+
+    // Delete logs for this task first (no direct index, so scan by task_and_date)
+    const logs = await ctx.db
+      .query("taskLogs")
+      .withIndex("by_task_and_date", (q) => q.eq("taskId", args.taskId))
+      .collect();
+    for (const log of logs) {
+      await ctx.db.delete(log._id);
+    }
+
+    await ctx.db.delete(args.taskId);
+    return { success: true };
+  },
+});
+
 export const getByCat = query({
   args: { catId: v.id("cats") },
   handler: async (ctx: QueryCtx, args: { catId: Id<"cats"> }) => {
@@ -53,15 +124,11 @@ export const getByCat = query({
   },
 });
 
-/**
- * Record a chore completion event by a roommate. Snapshots the user's current
- * display name so later renames don't rewrite historical logs.
- */
 export const logTask = mutation({
   args: {
     taskId: v.id("tasks"),
     catId: v.id("cats"),
-    dateString: v.string(), // "YYYY-MM-DD"
+    dateString: v.string(),
     value: v.optional(v.number()),
     clerkId: v.optional(v.string()),
   },
@@ -78,18 +145,14 @@ export const logTask = mutation({
     const identity = await ctx.auth.getUserIdentity();
     const clerkId = identity?.subject || args.clerkId;
 
-    if (!clerkId) {
-      throw new Error("Must be logged in to log tasks");
-    }
+    if (!clerkId) throw new Error("Must be logged in to log tasks");
 
     const user = await ctx.db
       .query("users")
       .withIndex("by_clerk_id", (q) => q.eq("clerkId", clerkId))
       .unique();
 
-    if (!user) {
-      throw new Error("User record not found. Sync user first.");
-    }
+    if (!user) throw new Error("User record not found. Sync user first.");
 
     const logId = await ctx.db.insert("taskLogs", {
       taskId: args.taskId,
@@ -105,23 +168,14 @@ export const logTask = mutation({
   },
 });
 
-/**
- * Remove a chore log entry (e.g. if accidentally checked off).
- */
 export const unlogTask = mutation({
-  args: {
-    logId: v.id("taskLogs"),
-  },
+  args: { logId: v.id("taskLogs") },
   handler: async (ctx: MutationCtx, args: { logId: Id<"taskLogs"> }) => {
     await ctx.db.delete(args.logId);
     return { success: true };
   },
 });
 
-/**
- * Fetch today's completed logs for a cat with roommate names. Prefers the
- * snapshot taken at log-time over the user's current name.
- */
 export const getDailyLogs = query({
   args: { catId: v.id("cats"), dateString: v.string() },
   handler: async (
@@ -135,7 +189,7 @@ export const getDailyLogs = query({
       )
       .collect();
 
-    const enrichedLogs = await Promise.all(
+    return await Promise.all(
       rawLogs.map(async (log) => {
         const user = await ctx.db.get(log.userId);
         const task = await ctx.db.get(log.taskId);
@@ -146,18 +200,11 @@ export const getDailyLogs = query({
         };
       })
     );
-
-    return enrichedLogs;
   },
 });
 
-/**
- * Fetch the live scrolling activity feed for the household.
- */
 export const getRecentHouseholdActivity = query({
-  args: {
-    householdId: v.optional(v.id("households")),
-  },
+  args: { householdId: v.optional(v.id("households")) },
   handler: async (ctx: QueryCtx, args: { householdId?: Id<"households"> }) => {
     if (!args.householdId) return [];
 
@@ -187,7 +234,7 @@ export const getRecentHouseholdActivity = query({
       .sort((a, b) => b.completedAt - a.completedAt)
       .slice(0, 25);
 
-    const enriched = await Promise.all(
+    return await Promise.all(
       householdLogs.map(async (log) => {
         const user = await ctx.db.get(log.userId);
         const task = await ctx.db.get(log.taskId);
@@ -200,18 +247,13 @@ export const getRecentHouseholdActivity = query({
         };
       })
     );
-
-    return enriched;
   },
 });
 
-/**
- * Aggregated query for the main dashboard.
- */
 export const getDashboardData = query({
   args: {
     householdId: v.optional(v.id("households")),
-    dateString: v.string(), // "YYYY-MM-DD"
+    dateString: v.string(),
   },
   handler: async (
     ctx: QueryCtx,
@@ -293,9 +335,6 @@ export const getDashboardData = query({
       })
     );
 
-    return {
-      household,
-      cats: catsData,
-    };
+    return { household, cats: catsData };
   },
 });

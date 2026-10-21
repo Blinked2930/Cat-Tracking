@@ -3,7 +3,114 @@ import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 
 /**
- * Generate a short-lived upload URL for Convex file storage (cat photo).
+ * Add a single cat to a household.
+ */
+export const createCat = mutation({
+  args: {
+    householdId: v.id("households"),
+    name: v.string(),
+    photoUrl: v.optional(v.string()),
+  },
+  handler: async (
+    ctx: MutationCtx,
+    args: {
+      householdId: Id<"households">;
+      name: string;
+      photoUrl?: string;
+    }
+  ) => {
+    const trimmed = args.name.trim();
+    if (!trimmed) throw new Error("Cat name is required");
+
+    const catId = await ctx.db.insert("cats", {
+      householdId: args.householdId,
+      name: trimmed,
+      photoUrl: args.photoUrl,
+    });
+
+    return catId;
+  },
+});
+
+/**
+ * Update a cat's name and/or photo.
+ */
+export const updateCat = mutation({
+  args: {
+    catId: v.id("cats"),
+    name: v.optional(v.string()),
+    photoUrl: v.optional(v.string()),
+    clearPhoto: v.optional(v.boolean()),
+  },
+  handler: async (
+    ctx: MutationCtx,
+    args: {
+      catId: Id<"cats">;
+      name?: string;
+      photoUrl?: string;
+      clearPhoto?: boolean;
+    }
+  ) => {
+    const cat = await ctx.db.get(args.catId);
+    if (!cat) throw new Error("Cat not found");
+
+    const patch: Record<string, any> = {};
+
+    if (args.name !== undefined) {
+      const trimmed = args.name.trim();
+      if (!trimmed) throw new Error("Cat name cannot be empty");
+      patch.name = trimmed;
+    }
+
+    if (args.clearPhoto) {
+      patch.photoUrl = undefined;
+    } else if (args.photoUrl !== undefined) {
+      patch.photoUrl = args.photoUrl;
+    }
+
+    if (Object.keys(patch).length > 0) {
+      await ctx.db.patch(args.catId, patch);
+    }
+
+    return { success: true };
+  },
+});
+
+/**
+ * Delete a cat along with its tasks and today's/all logs.
+ */
+export const deleteCat = mutation({
+  args: { catId: v.id("cats") },
+  handler: async (ctx: MutationCtx, args: { catId: Id<"cats"> }) => {
+    const cat = await ctx.db.get(args.catId);
+    if (!cat) throw new Error("Cat not found");
+
+    // Delete all tasks for this cat
+    const tasks = await ctx.db
+      .query("tasks")
+      .withIndex("by_cat", (q) => q.eq("catId", args.catId))
+      .collect();
+    for (const task of tasks) {
+      await ctx.db.delete(task._id);
+    }
+
+    // Delete all taskLogs for this cat
+    const logs = await ctx.db
+      .query("taskLogs")
+      .withIndex("by_cat_and_date", (q) => q.eq("catId", args.catId))
+      .collect();
+    for (const log of logs) {
+      await ctx.db.delete(log._id);
+    }
+
+    await ctx.db.delete(args.catId);
+
+    return { success: true };
+  },
+});
+
+/**
+ * Generate a Convex upload URL for cat photos.
  */
 export const generateUploadUrl = mutation({
   args: {},
@@ -13,49 +120,7 @@ export const generateUploadUrl = mutation({
 });
 
 /**
- * Add a single cat to a squat/household.
- */
-export const createCat = mutation({
-  args: {
-    householdId: v.id("households"),
-    name: v.string(),
-    photoStorageId: v.optional(v.string()),
-    photoUrl: v.optional(v.string()),
-    clerkId: v.optional(v.string()),
-  },
-  handler: async (
-    ctx: MutationCtx,
-    args: {
-      householdId: Id<"households">;
-      name: string;
-      photoStorageId?: string;
-      photoUrl?: string;
-      clerkId?: string;
-    }
-  ) => {
-    const trimmed = args.name.trim();
-    if (!trimmed) {
-      throw new Error("Cat name cannot be empty");
-    }
-
-    let finalPhotoUrl = args.photoUrl;
-    if (args.photoStorageId) {
-      finalPhotoUrl = (await ctx.storage.getUrl(args.photoStorageId)) || undefined;
-    }
-
-    const catId = await ctx.db.insert("cats", {
-      householdId: args.householdId,
-      name: trimmed,
-      photoUrl: finalPhotoUrl,
-    });
-
-    return catId;
-  },
-});
-
-/**
- * Atomic mutation to save the full household setup:
- * multiple cats, each with their configured daily tasks and optional uploaded photos.
+ * Batch-create a set of cats + tasks for household setup.
  */
 export const saveHouseholdSetup = mutation({
   args: {
@@ -63,12 +128,12 @@ export const saveHouseholdSetup = mutation({
     cats: v.array(
       v.object({
         name: v.string(),
-        photoStorageId: v.optional(v.string()),
         photoUrl: v.optional(v.string()),
+        photoStorageId: v.optional(v.string()),
         tasks: v.array(
           v.object({
             title: v.string(),
-            type: v.string(), // "checkbox" | "counter"
+            type: v.string(),
             frequency: v.number(),
             config: v.optional(v.any()),
           })
@@ -76,123 +141,35 @@ export const saveHouseholdSetup = mutation({
       })
     ),
   },
-  handler: async (
-    ctx: MutationCtx,
-    args: {
-      householdId: Id<"households">;
-      cats: Array<{
-        name: string;
-        photoStorageId?: string;
-        photoUrl?: string;
-        tasks: Array<{
-          title: string;
-          type: string;
-          frequency: number;
-          config?: any;
-        }>;
-      }>;
-    }
-  ) => {
-    if (args.cats.length === 0) {
-      throw new Error("Please add at least one cat to the household setup");
-    }
+  handler: async (ctx: MutationCtx, args: any) => {
+    const results = [];
 
-    const createdCatIds: Id<"cats">[] = [];
+    for (const cat of args.cats) {
+      let resolvedPhotoUrl = cat.photoUrl;
 
-    for (const catData of args.cats) {
-      const trimmedName = catData.name.trim();
-      if (!trimmedName) continue;
-
-      let photoUrl = catData.photoUrl;
-      if (catData.photoStorageId) {
-        photoUrl = (await ctx.storage.getUrl(catData.photoStorageId)) || undefined;
+      if (cat.photoStorageId) {
+        resolvedPhotoUrl = (await ctx.storage.getUrl(cat.photoStorageId)) || cat.photoUrl;
       }
 
-      // 1. Insert Cat
       const catId = await ctx.db.insert("cats", {
         householdId: args.householdId,
-        name: trimmedName,
-        photoUrl,
+        name: cat.name.trim(),
+        photoUrl: resolvedPhotoUrl,
       });
 
-      createdCatIds.push(catId);
-
-      // 2. Insert Tasks for this Cat
-      for (const taskData of catData.tasks) {
-        const trimmedTitle = taskData.title.trim();
-        if (!trimmedTitle) continue;
-
+      for (const task of cat.tasks) {
         await ctx.db.insert("tasks", {
           catId,
-          title: trimmedTitle,
-          type: taskData.type || "checkbox",
-          frequency: Math.max(1, taskData.frequency || 1),
-          config: taskData.config,
+          title: task.title.trim(),
+          type: task.type || "checkbox",
+          frequency: Math.max(1, task.frequency || 1),
+          config: task.config,
         });
       }
+
+      results.push({ _id: catId, name: cat.name });
     }
 
-    return {
-      success: true,
-      catCount: createdCatIds.length,
-      catIds: createdCatIds,
-    };
-  },
-});
-
-/**
- * Fetch all cats belonging to a household, including their tasks.
- */
-export const getCatsByHousehold = query({
-  args: {
-    householdId: v.optional(v.id("households")),
-  },
-  handler: async (ctx: QueryCtx, args: { householdId?: Id<"households"> }) => {
-    if (!args.householdId) return [];
-
-    const cats = await ctx.db
-      .query("cats")
-      .withIndex("by_household", (q: any) => q.eq("householdId", args.householdId!))
-      .collect();
-
-    // Fetch tasks for each cat
-    const catsWithTasks = await Promise.all(
-      cats.map(async (cat: any) => {
-        const tasks = await ctx.db
-          .query("tasks")
-          .withIndex("by_cat", (q: any) => q.eq("catId", cat._id))
-          .collect();
-        return {
-          ...cat,
-          tasks,
-        };
-      })
-    );
-
-    return catsWithTasks;
-  },
-});
-
-/**
- * Delete a cat and their associated tasks/logs.
- */
-export const removeCat = mutation({
-  args: {
-    catId: v.id("cats"),
-  },
-  handler: async (ctx: MutationCtx, args: { catId: Id<"cats"> }) => {
-    // Delete associated tasks
-    const tasks = await ctx.db
-      .query("tasks")
-      .withIndex("by_cat", (q: any) => q.eq("catId", args.catId))
-      .collect();
-
-    for (const task of tasks) {
-      await ctx.db.delete(task._id);
-    }
-
-    // Delete cat
-    await ctx.db.delete(args.catId);
-    return { success: true };
+    return results;
   },
 });

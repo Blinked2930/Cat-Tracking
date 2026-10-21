@@ -7,15 +7,8 @@ import { api } from "../../convex/_generated/api";
 import OnboardingFlow from "@/components/OnboardingFlow";
 import CatDashboard from "@/components/CatDashboard";
 import DisplayNameDropdown from "@/components/DisplayNameDropdown";
-import MobileNav from "@/components/MobileNav";
 import InstallAppModal from "@/components/InstallAppModal";
-import {
-  LayoutDashboard,
-  FileText,
-  LogOut,
-  AlertTriangle,
-  Download,
-} from "lucide-react";
+import { AlertTriangle, Download } from "lucide-react";
 
 interface ActiveHousehold {
   id: string;
@@ -60,10 +53,6 @@ export default function Home() {
     }
   }, [currentUserData]);
 
-  const goToDashboard = () => {
-    if (activeHousehold) setActiveView("dashboard");
-  };
-
   const confirmLeaveHousehold = async () => {
     if (!clerkUser?.id) {
       setLeaveError("You need to be signed in to leave.");
@@ -101,28 +90,6 @@ export default function Home() {
     );
   }
 
-  const navItems = [
-    {
-      key: "dashboard",
-      label: "Dashboard",
-      icon: <LayoutDashboard className="w-3.5 h-3.5" />,
-      onClick: goToDashboard,
-      active: activeView === "dashboard",
-      disabled: !activeHousehold,
-    },
-    ...(activeHousehold
-      ? []
-      : [
-        {
-          key: "join",
-          label: "Join",
-          icon: <FileText className="w-3.5 h-3.5" />,
-          onClick: () => setActiveView("onboarding"),
-          active: activeView === "onboarding",
-        },
-      ]),
-  ];
-
   return (
     <div className="min-h-screen bg-paper text-ink flex flex-col justify-between selection:bg-accent selection:text-white pb-8">
       <header className="w-full bg-ink text-paper border-b-4 border-black py-3 px-4 sm:px-8">
@@ -136,29 +103,11 @@ export default function Home() {
             </span>
           </div>
 
-          <nav className="hidden md:flex items-center gap-1.5 text-xs">
-            {navItems.map((item) => (
-              <button
-                key={item.key}
-                onClick={item.onClick}
-                disabled={item.disabled}
-                className={`px-3 py-1 font-bold border-2 transition-all flex items-center gap-1.5 ${item.active
-                    ? "bg-highlight text-black border-black shadow-[2px_2px_0_0_var(--accent)]"
-                    : "bg-black text-paper border-transparent hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed"
-                  }`}
-              >
-                {item.icon}
-                <span>{item.label.toUpperCase()}</span>
-              </button>
-            ))}
-          </nav>
-
           <div className="flex items-center gap-2 shrink-0">
             {clerkUser && (
               <>
                 <DisplayNameDropdown />
                 <UserButton />
-                <MobileNav items={navItems} />
               </>
             )}
           </div>
@@ -186,15 +135,6 @@ export default function Home() {
               userName={currentUserData?.name || "Roommate"}
               onRequestLeave={() => setShowLeaveConfirm(true)}
             />
-          </section>
-        )}
-
-        {activeView === "dashboard" && !activeHousehold && (
-          <section className="max-w-xl mx-auto text-center py-12">
-            <p className="font-mono text-sm text-ink-muted">
-              No household loaded. Go to <strong>JOIN</strong> to create or join
-              one.
-            </p>
           </section>
         )}
       </main>

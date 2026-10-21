@@ -7,13 +7,22 @@ import { api } from "../../convex/_generated/api";
 import OnboardingFlow from "@/components/OnboardingFlow";
 import CatDashboard from "@/components/CatDashboard";
 import DisplayNameDropdown from "@/components/DisplayNameDropdown";
-import InstallAppModal from "@/components/InstallAppModal";
-import { AlertTriangle, Download } from "lucide-react";
+import InstallScreen from "@/components/InstallScreen";
+import { AlertTriangle } from "lucide-react";
 
 interface ActiveHousehold {
   id: string;
   name: string;
   inviteCode: string;
+}
+
+const INSTALL_DISMISSED_KEY = "catsync-install-dismissed";
+
+function isStandalone(): boolean {
+  if (typeof window === "undefined") return false;
+  const mq = window.matchMedia("(display-mode: standalone)").matches;
+  const iosStandalone = (window.navigator as any).standalone === true;
+  return mq || iosStandalone;
 }
 
 export default function Home() {
@@ -28,12 +37,31 @@ export default function Home() {
   const [isLeaving, setIsLeaving] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [leaveError, setLeaveError] = useState<string | null>(null);
-  const [showInstallModal, setShowInstallModal] = useState(false);
+
+  const [installGateChecked, setInstallGateChecked] = useState(false);
+  const [installDismissed, setInstallDismissed] = useState(false);
 
   const currentUserData = useQuery(
     api.users.currentUser,
     clerkUser?.id ? { clerkId: clerkUser.id } : "skip"
   );
+
+  useEffect(() => {
+    const dismissed =
+      typeof window !== "undefined" &&
+      localStorage.getItem(INSTALL_DISMISSED_KEY) === "1";
+    setInstallDismissed(dismissed || isStandalone());
+    setInstallGateChecked(true);
+  }, []);
+
+  const handleInstallBypass = () => {
+    try {
+      localStorage.setItem(INSTALL_DISMISSED_KEY, "1");
+    } catch {
+      // localStorage unavailable — dismissal won't persist
+    }
+    setInstallDismissed(true);
+  };
 
   useEffect(() => {
     if (!currentUserData) return;
@@ -74,6 +102,18 @@ export default function Home() {
     }
   };
 
+  if (!installGateChecked) {
+    return (
+      <div className="min-h-screen bg-paper text-ink flex items-center justify-center font-mono text-sm">
+        Loading…
+      </div>
+    );
+  }
+
+  if (!installDismissed) {
+    return <InstallScreen onBypass={handleInstallBypass} />;
+  }
+
   if (!isClerkLoaded) {
     return (
       <div className="min-h-screen bg-paper text-ink flex items-center justify-center font-mono text-sm">
@@ -91,7 +131,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-paper text-ink flex flex-col justify-between selection:bg-accent selection:text-white pb-8">
+    <div className="min-h-screen bg-paper text-ink flex flex-col selection:bg-accent selection:text-white">
       <header className="w-full bg-ink text-paper border-b-4 border-black py-3 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-3 font-mono">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -109,7 +149,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8 pb-8">
         {activeView === "onboarding" && (
           <section className="max-w-xl mx-auto">
             <OnboardingFlow
@@ -133,21 +173,6 @@ export default function Home() {
           </section>
         )}
       </main>
-
-      <footer className="w-full border-t-2 border-black/20 pt-4 px-4">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-[11px] font-mono font-bold text-ink-muted uppercase tracking-wide text-center sm:text-left">
-            CATSYNC • REAL-TIME CAT CARE FOR ROOMMATES
-          </p>
-          <button
-            onClick={() => setShowInstallModal(true)}
-            className="text-[11px] font-mono font-bold uppercase text-ink-muted hover:text-black flex items-center gap-1"
-          >
-            <Download className="w-3 h-3" />
-            Install App
-          </button>
-        </div>
-      </footer>
 
       {showLeaveConfirm && (
         <div
@@ -197,11 +222,6 @@ export default function Home() {
           </div>
         </div>
       )}
-
-      <InstallAppModal
-        isOpen={showInstallModal}
-        onClose={() => setShowInstallModal(false)}
-      />
     </div>
   );
 }

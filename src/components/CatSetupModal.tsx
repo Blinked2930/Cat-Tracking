@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { Plus, Trash2, ChevronDown, Check } from "lucide-react";
+import PunkDropdown from "./PunkDropdown";
+import { Plus, Trash2, X } from "lucide-react";
 
 interface RoutineDraft {
   title: string;
@@ -12,86 +13,11 @@ interface RoutineDraft {
 }
 
 const TASK_TYPES = [
-  { value: "checkbox", label: "Checkbox (done / not done)" },
-  { value: "counter", label: "Counter (log multiple times)" },
+  { value: "checkbox", label: "Checkbox" },
+  { value: "counter", label: "Counter" },
 ] as const;
 
-const FREQUENCIES = [1, 2, 3, 4, 5] as const;
-
-/**
- * Reusable styled dropdown — replaces the native <select>.
- * Closes on outside click and on Escape.
- */
-function PunkDropdown<T extends string | number>({
-  value,
-  onChange,
-  options,
-  className = "",
-}: {
-  value: T;
-  onChange: (value: T) => void;
-  options: ReadonlyArray<{ value: T; label: string }>;
-  className?: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onDocClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("mousedown", onDocClick);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDocClick);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
-  const selected = options.find((o) => o.value === value);
-
-  return (
-    <div ref={ref} className={`relative ${className}`}>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-full bg-white border-2 border-black px-2 py-1.5 text-xs font-mono font-bold text-black flex items-center justify-between gap-1 hover:bg-paper"
-      >
-        <span className="truncate">{selected?.label ?? "—"}</span>
-        <ChevronDown
-          className={`w-3 h-3 shrink-0 transition-transform ${open ? "rotate-180" : ""
-            }`}
-        />
-      </button>
-
-      {open && (
-        <div className="absolute z-30 mt-1 w-full min-w-[10rem] bg-white border-2 border-black shadow-[3px_3px_0_0_var(--ink)]">
-          {options.map((opt) => (
-            <button
-              key={String(opt.value)}
-              type="button"
-              onClick={() => {
-                onChange(opt.value);
-                setOpen(false);
-              }}
-              className={`w-full text-left px-2 py-1.5 text-xs font-mono font-bold flex items-center justify-between gap-1 hover:bg-highlight ${opt.value === value ? "bg-paper" : ""
-                }`}
-            >
-              <span className="truncate">{opt.label}</span>
-              {opt.value === value && <Check className="w-3 h-3 shrink-0" />}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+const FREQ_OPTIONS = [1, 2, 3, 4, 5] as const;
 
 export default function CatSetupModal({
   householdId,
@@ -104,7 +30,6 @@ export default function CatSetupModal({
   onClose: () => void;
   onCatCreated?: (cat: any) => void;
 }) {
-  // -------- Hooks at top, unconditionally --------
   const createCatMutation = useMutation(api.cats.createCat);
   const createTaskMutation = useMutation(api.tasks.createTask);
 
@@ -112,7 +37,6 @@ export default function CatSetupModal({
   const [routines, setRoutines] = useState<RoutineDraft[]>([
     { title: "Morning Feeding", type: "checkbox", frequency: 1 },
     { title: "Evening Wet Food", type: "checkbox", frequency: 1 },
-    { title: "Clean Litter Box", type: "checkbox", frequency: 1 },
   ]);
   const [newRoutineTitle, setNewRoutineTitle] = useState("");
   const [newRoutineType, setNewRoutineType] = useState<"checkbox" | "counter">(
@@ -122,7 +46,13 @@ export default function CatSetupModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // -------- Handlers --------
+  useEffect(() => {
+    // Reset frequency to 1 when type becomes checkbox
+    if (newRoutineType === "checkbox" && newRoutineFreq !== 1) {
+      setNewRoutineFreq(1);
+    }
+  }, [newRoutineType, newRoutineFreq]);
+
   const addRoutine = () => {
     if (!newRoutineTitle.trim()) return;
     setRoutines([
@@ -130,7 +60,7 @@ export default function CatSetupModal({
       {
         title: newRoutineTitle.trim(),
         type: newRoutineType,
-        frequency: Math.max(1, newRoutineFreq),
+        frequency: newRoutineType === "checkbox" ? 1 : Math.max(1, newRoutineFreq),
       },
     ]);
     setNewRoutineTitle("");
@@ -150,9 +80,6 @@ export default function CatSetupModal({
     setError(null);
 
     try {
-      // Always go through the real mutation. If it's not ready (shouldn't
-      // happen — useMutation returns a callable immediately), the call
-      // throws and we surface the error instead of silently mocking.
       const catId = await createCatMutation({
         householdId: householdId as any,
         name: catName.trim(),
@@ -163,7 +90,7 @@ export default function CatSetupModal({
           catId,
           title: routine.title,
           type: routine.type,
-          frequency: routine.frequency,
+          frequency: routine.type === "checkbox" ? 1 : routine.frequency,
         });
       }
 
@@ -173,12 +100,10 @@ export default function CatSetupModal({
         tasks: routines,
       });
 
-      // Reset form for next open
       setCatName("");
       setRoutines([
         { title: "Morning Feeding", type: "checkbox", frequency: 1 },
         { title: "Evening Wet Food", type: "checkbox", frequency: 1 },
-        { title: "Clean Litter Box", type: "checkbox", frequency: 1 },
       ]);
       onClose();
     } catch (err: any) {
@@ -188,22 +113,17 @@ export default function CatSetupModal({
     }
   };
 
-  const handleBackdropClick = () => {
-    if (!isSubmitting) onClose();
-  };
-
   if (!isOpen) return null;
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 bg-black/75 backdrop-blur-xs overflow-y-auto"
-      onClick={handleBackdropClick}
+      onClick={() => !isSubmitting && onClose()}
     >
       <div
         className="relative w-full max-w-lg bg-paper border-4 border-black shadow-[10px_10px_0px_0px_var(--ink)] p-5 sm:p-6 my-8"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between mb-4 pb-3 border-b-3 border-black">
           <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-black">
             New Cat
@@ -214,12 +134,11 @@ export default function CatSetupModal({
             className="w-7 h-7 bg-ink text-paper font-mono font-bold flex items-center justify-center hover:bg-accent transition-colors border-2 border-black disabled:opacity-50"
             aria-label="Close"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Name */}
           <div>
             <label className="block text-[10px] font-mono font-black uppercase text-ink-muted mb-1">
               Cat Name
@@ -235,15 +154,11 @@ export default function CatSetupModal({
             />
           </div>
 
-          {/* Routines list */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-[10px] font-mono font-black uppercase text-ink-muted">
                 Daily Routines ({routines.length})
               </label>
-              <span className="text-[10px] font-mono text-ink-muted">
-                resets at midnight
-              </span>
             </div>
 
             {routines.length > 0 && (
@@ -259,7 +174,7 @@ export default function CatSetupModal({
                       </p>
                       <p className="text-[10px] text-ink-muted">
                         {r.type === "counter" ? "Counter" : "Checkbox"} ·{" "}
-                        {r.frequency}x/day
+                        {r.type === "checkbox" ? "1x/day" : `${r.frequency}x/day`}
                       </p>
                     </div>
                     <button
@@ -275,7 +190,6 @@ export default function CatSetupModal({
               </div>
             )}
 
-            {/* Add routine */}
             <div className="bg-paper-card border-2 border-dashed border-black p-3 space-y-2">
               <input
                 type="text"
@@ -292,21 +206,26 @@ export default function CatSetupModal({
                     options={TASK_TYPES}
                   />
                 </div>
-                <div className="sm:col-span-3">
-                  <PunkDropdown
-                    value={newRoutineFreq}
-                    onChange={(v) => setNewRoutineFreq(v)}
-                    options={FREQUENCIES.map((f) => ({
-                      value: f,
-                      label: `${f}x`,
-                    }))}
-                  />
-                </div>
+                {newRoutineType === "counter" && (
+                  <div className="sm:col-span-3">
+                    <PunkDropdown
+                      value={newRoutineFreq}
+                      onChange={(v) => setNewRoutineFreq(v)}
+                      options={FREQ_OPTIONS.map((f) => ({
+                        value: f,
+                        label: `${f}x`,
+                      }))}
+                    />
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={addRoutine}
                   disabled={!newRoutineTitle.trim()}
-                  className="sm:col-span-2 punk-button bg-highlight text-black px-3 py-1.5 text-xs font-black flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`punk-button bg-highlight text-black px-3 py-1.5 text-xs font-black flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed ${newRoutineType === "counter"
+                      ? "sm:col-span-2"
+                      : "sm:col-span-5"
+                    }`}
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Add
@@ -321,7 +240,6 @@ export default function CatSetupModal({
             </div>
           )}
 
-          {/* Actions */}
           <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
             <button
               type="button"

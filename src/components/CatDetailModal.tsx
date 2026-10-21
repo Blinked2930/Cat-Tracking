@@ -182,24 +182,31 @@ export default function CatDetailModal({
                       >
                         <div className="flex items-center justify-between gap-2.5">
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <div
-                              className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-xs transition-colors shrink-0 ${task.isDone
-                                  ? "bg-ink text-highlight"
-                                  : started
-                                    ? "bg-highlight text-black"
-                                    : "bg-white"
-                                }`}
-                            >
-                              {isCounter ? (
-                                <span className="text-[10px]">
+                            {isCounter ? (
+                              <div
+                                className={`min-w-[44px] h-7 px-2 border-2 border-black flex items-center justify-center font-mono font-black text-[11px] transition-colors shrink-0 ${task.isDone
+                                    ? "bg-ink text-highlight"
+                                    : started
+                                      ? "bg-highlight text-black"
+                                      : "bg-white text-black"
+                                  }`}
+                              >
+                                <span className="leading-none">
                                   {completed}/{task.frequency}
                                 </span>
-                              ) : (
-                                task.isDone && (
+                              </div>
+                            ) : (
+                              <div
+                                className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-xs transition-colors shrink-0 ${task.isDone
+                                    ? "bg-ink text-highlight"
+                                    : "bg-white"
+                                  }`}
+                              >
+                                {task.isDone && (
                                   <Check className="w-3.5 h-3.5 stroke-[4]" />
-                                )
-                              )}
-                            </div>
+                                )}
+                              </div>
+                            )}
 
                             <div className="min-w-0">
                               <p
@@ -280,6 +287,10 @@ export default function CatDetailModal({
         cat={cat}
         isOpen={showEdit}
         onClose={() => setShowEdit(false)}
+        onDeleted={() => {
+          setShowEdit(false);
+          onClose();
+        }}
       />
     </>
   );

@@ -23,7 +23,6 @@ export default function DisplayNameDropdown() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const hasAutoOpenedRef = useRef(false);
-
   const ref = useRef<HTMLDivElement>(null);
 
   const activeName = currentUserData?.name ?? "Roommate";
@@ -122,16 +121,27 @@ export default function DisplayNameDropdown() {
     }
   };
 
+  const initial = needsName ? "?" : activeName.trim().charAt(0).toUpperCase();
+
   return (
     <div ref={ref} className="relative">
+      {/* Trigger button — avatar chip + name */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className={`px-2.5 py-1 text-xs font-mono font-bold border-2 flex items-center gap-1.5 max-w-[180px] transition-colors ${needsName
+        className={`flex items-center gap-2 px-1.5 py-1 border-2 transition-all max-w-[200px] ${needsName
             ? "bg-highlight text-black border-black"
             : "text-paper border-transparent hover:border-zinc-700"
           }`}
       >
-        <span className="truncate">
+        <span
+          className={`w-6 h-6 flex items-center justify-center border-2 font-mono font-black text-xs shrink-0 ${needsName
+              ? "bg-black text-highlight border-black"
+              : "bg-highlight text-black border-black"
+            }`}
+        >
+          {initial}
+        </span>
+        <span className="font-mono font-bold text-xs truncate">
           {needsName ? "Set your name" : activeName}
         </span>
         <ChevronDown
@@ -141,27 +151,27 @@ export default function DisplayNameDropdown() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 z-50 w-64 bg-paper border-3 border-black shadow-[4px_4px_0_0_var(--ink)]">
-          {/* Prompt header (only when user has no name) */}
+        <div className="absolute right-0 top-full mt-2 z-50 w-64 bg-paper border-4 border-black shadow-[6px_6px_0_0_var(--ink)]">
+          {/* Header band */}
+          <div className="bg-ink text-paper px-3 py-2 border-b-3 border-black flex items-center justify-between">
+            <span className="font-mono font-black uppercase text-[10px] tracking-wider">
+              {needsName ? "Set Name" : "Displayed As"}
+            </span>
+            {!needsName && (
+              <span className="font-mono font-bold text-[10px] text-highlight truncate max-w-[120px]">
+                {activeName}
+              </span>
+            )}
+          </div>
+
           {needsName && (
-            <div className="px-3 pt-3 pb-2 border-b-2 border-black/20">
-              <div className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 bg-accent mt-1.5 shrink-0" />
-                <p className="text-[11px] font-mono font-bold text-black leading-snug">
-                  Pick a name so your roommates know who logged what.
-                </p>
-              </div>
+            <div className="px-3 py-2 border-b-2 border-black/20 bg-highlight/30">
+              <p className="text-[11px] font-mono font-bold text-black leading-snug">
+                Pick a name so roommates know who logged what.
+              </p>
             </div>
           )}
 
-          {/* Header label */}
-          <div className="px-3 pt-2.5 pb-1.5">
-            <p className="text-[9px] font-mono font-black uppercase tracking-wider text-ink-muted">
-              {needsName ? "Your name" : "Display as"}
-            </p>
-          </div>
-
-          {/* Saved names list (hidden when needsName) */}
           {!needsName && savedNames.length > 0 && (
             <div className="max-h-56 overflow-y-auto">
               {savedNames.map((name) => {
@@ -169,26 +179,34 @@ export default function DisplayNameDropdown() {
                 return (
                   <div
                     key={name}
-                    className={`flex items-center justify-between gap-1 px-2 py-1.5 ${isActive
-                        ? "bg-highlight/30"
+                    className={`group flex items-center justify-between gap-1 px-2 py-1.5 border-b border-black/10 last:border-b-0 ${isActive
+                        ? "bg-highlight/40"
                         : "hover:bg-paper-hover"
                       }`}
                   >
                     <button
                       onClick={() => handleSwitch(name)}
                       disabled={busy}
-                      className="flex-1 text-left text-xs font-mono font-bold text-black truncate flex items-center gap-1.5 disabled:opacity-50"
+                      className="flex-1 text-left text-xs font-mono font-bold text-black truncate flex items-center gap-2 disabled:opacity-50"
                     >
-                      {isActive && <Check className="w-3 h-3 shrink-0" />}
-                      <span className={isActive ? "" : "ml-[18px]"}>
-                        {name}
+                      <span
+                        className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-[10px] shrink-0 ${isActive
+                            ? "bg-black text-highlight"
+                            : "bg-white text-black"
+                          }`}
+                      >
+                        {name.trim().charAt(0).toUpperCase()}
                       </span>
+                      <span className="truncate">{name}</span>
+                      {isActive && (
+                        <Check className="w-3 h-3 shrink-0 ml-auto" />
+                      )}
                     </button>
                     {!isActive && (
                       <button
                         onClick={() => handleRemove(name)}
                         disabled={busy}
-                        className="p-1 text-red-600 hover:text-black disabled:opacity-50 shrink-0"
+                        className="p-1 text-red-600 hover:text-black disabled:opacity-50 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
                         aria-label={`Remove ${name}`}
                       >
                         <Trash2 className="w-3 h-3" />
@@ -200,14 +218,12 @@ export default function DisplayNameDropdown() {
             </div>
           )}
 
-          {/* Error */}
           {error && (
             <div className="mx-2 my-1.5 px-2 py-1 text-[10px] font-mono font-bold bg-accent text-white border-2 border-black">
               {error}
             </div>
           )}
 
-          {/* Add form */}
           {isAdding || needsName ? (
             <form
               onSubmit={handleAdd}

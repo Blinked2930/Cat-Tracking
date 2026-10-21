@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import PunkDropdown from "./PunkDropdown";
 import { Plus, Trash2, X, Upload } from "lucide-react";
 
 interface TaskItem {
@@ -26,19 +27,16 @@ interface EditCatModalProps {
     cat: CatData;
     isOpen: boolean;
     onClose: () => void;
+    onDeleted?: () => void;
 }
 
-interface NewTaskDraft {
-    id: string;
-    title: string;
-    type: "checkbox" | "counter";
-    frequency: number;
-}
+const FREQ_OPTIONS = [1, 2, 3, 4, 5] as const;
 
 export default function EditCatModal({
     cat,
     isOpen,
     onClose,
+    onDeleted,
 }: EditCatModalProps) {
     const updateCatMutation = useMutation(api.cats.updateCat);
     const deleteCatMutation = useMutation(api.cats.deleteCat);
@@ -54,7 +52,6 @@ export default function EditCatModal({
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [clearPhoto, setClearPhoto] = useState(false);
 
-    // Local editable task list
     const [tasks, setTasks] = useState<
         Array<{
             _id: string;
@@ -80,7 +77,6 @@ export default function EditCatModal({
     const [error, setError] = useState<string | null>(null);
     const [confirmDelete, setConfirmDelete] = useState(false);
 
-    // Reset when the modal opens on a different cat
     useEffect(() => {
         if (!isOpen) return;
         setName(cat.name);
@@ -136,15 +132,17 @@ export default function EditCatModal({
 
     const handleRemoveTask = (taskId: string) => {
         setTasks((prev) =>
-            prev.map((t) =>
-                t._id === taskId ? { ...t, isDeleted: true } : t
-            )
+            prev.map((t) => (t._id === taskId ? { ...t, isDeleted: true } : t))
         );
     };
 
     const handleUpdateTaskLocal = (
         taskId: string,
-        updates: Partial<{ title: string; type: "checkbox" | "counter"; frequency: number }>
+        updates: Partial<{
+            title: string;
+            type: "checkbox" | "counter";
+            frequency: number;
+        }>
     ) => {
         setTasks((prev) =>
             prev.map((t) => (t._id === taskId ? { ...t, ...updates } : t))
@@ -156,7 +154,6 @@ export default function EditCatModal({
         setError(null);
 
         try {
-            // 1. Handle photo upload if new file
             let nextPhotoUrl: string | undefined = cat.photoUrl;
             if (photoFile) {
                 try {
@@ -167,14 +164,7 @@ export default function EditCatModal({
                         body: photoFile,
                     });
                     const json = await res.json();
-                    // Fetch the URL for the storage id
                     if (json.storageId) {
-                        // We don't have a direct getUrl mutation; store a placeholder.
-                        // Simpler: use the local preview URL as the display (it will
-                        // survive until refresh; then we'd need the storage URL).
-                        // To keep this clean, we'll rely on a follow-up: cats.ts has a
-                        // getUrlForStorageId query? For now store the storageId-less
-                        // preview as the photoUrl.
                         nextPhotoUrl = photoPreview ?? undefined;
                     }
                 } catch (err) {
@@ -182,7 +172,6 @@ export default function EditCatModal({
                 }
             }
 
-            // 2. Update cat name/photo
             await updateCatMutation({
                 catId: cat._id as any,
                 name: name.trim() !== cat.name ? name.trim() : undefined,
@@ -190,7 +179,6 @@ export default function EditCatModal({
                 clearPhoto: clearPhoto || undefined,
             });
 
-            // 3. Handle task changes
             for (const t of tasks) {
                 if (t.isDeleted && !t.isNew && !t._id.startsWith("new-")) {
                     await deleteTaskMutation({ taskId: t._id as any });
@@ -233,6 +221,7 @@ export default function EditCatModal({
         try {
             await deleteCatMutation({ catId: cat._id as any });
             onClose();
+            onDeleted?.();
         } catch (err: any) {
             setError(err?.message || "Could not delete cat");
         } finally {
@@ -271,7 +260,6 @@ export default function EditCatModal({
                     </div>
                 )}
 
-                {/* Name + photo */}
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 mb-4">
                     <div className="sm:col-span-8">
                         <label className="block text-[10px] font-mono font-black uppercase text-ink-muted mb-1">
@@ -322,7 +310,6 @@ export default function EditCatModal({
                     </div>
                 </div>
 
-                {/* Tasks */}
                 <div className="mb-4">
                     <label className="block text-[10px] font-mono font-black uppercase text-ink-muted mb-2">
                         Daily Routines ({visibleTasks.length})
@@ -385,21 +372,17 @@ export default function EditCatModal({
                                     </div>
 
                                     {t.type === "counter" && (
-                                        <select
+                                        <PunkDropdown
                                             value={t.frequency}
-                                            onChange={(e) =>
-                                                handleUpdateTaskLocal(t._id, {
-                                                    frequency: Number(e.target.value),
-                                                })
+                                            onChange={(v) =>
+                                                handleUpdateTaskLocal(t._id, { frequency: v })
                                             }
-                                            className="bg-white border border-black px-1 py-0.5 text-[10px] font-mono font-bold"
-                                        >
-                                            {[1, 2, 3, 4, 5].map((n) => (
-                                                <option key={n} value={n}>
-                                                    {n}x/day
-                                                </option>
-                                            ))}
-                                        </select>
+                                            options={FREQ_OPTIONS.map((f) => ({
+                                                value: f,
+                                                label: `${f}x/day`,
+                                            }))}
+                                            className="w-24"
+                                        />
                                     )}
                                 </div>
                             </div>
@@ -412,7 +395,6 @@ export default function EditCatModal({
                         )}
                     </div>
 
-                    {/* Add new routine */}
                     <div className="mt-2 bg-paper-card border-2 border-dashed border-black p-2">
                         <input
                             type="text"
@@ -439,7 +421,6 @@ export default function EditCatModal({
                     </div>
                 </div>
 
-                {/* Delete confirmation */}
                 {confirmDelete && (
                     <div className="mb-3 p-3 border-2 border-black bg-accent text-white">
                         <p className="text-xs font-mono font-bold mb-2">
@@ -464,7 +445,6 @@ export default function EditCatModal({
                     </div>
                 )}
 
-                {/* Actions */}
                 <div className="flex flex-col-reverse sm:flex-row gap-2 pt-2">
                     <button
                         type="button"

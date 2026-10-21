@@ -7,7 +7,14 @@ import JaggedCatSilhouette from "./JaggedCatSilhouette";
 import CatSetupModal from "./CatSetupModal";
 import CatDetailModal from "./CatDetailModal";
 import { formatTime } from "@/lib/formatTime";
-import { Check, Plus, ExternalLink, AlertTriangle, LogOut, Copy } from "lucide-react";
+import {
+  Check,
+  Plus,
+  ExternalLink,
+  AlertTriangle,
+  LogOut,
+  Copy,
+} from "lucide-react";
 
 interface TaskItem {
   _id: string;
@@ -119,23 +126,23 @@ export default function CatDashboard({
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-5 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-3 border-b-2 border-black/20">
+    <div className="w-full max-w-6xl mx-auto space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 sm:gap-3 pb-2.5 sm:pb-3 border-b-2 border-black/20">
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl sm:text-3xl font-black uppercase tracking-tight text-black truncate">
+          <h1 className="text-lg sm:text-3xl font-black uppercase tracking-tight text-black truncate">
             {householdName}
           </h1>
-          <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-ink-muted">
+          <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+            <span className="text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider text-ink-muted">
               Invite
             </span>
             <button
               onClick={copyCode}
-              className="inline-flex items-center gap-1.5 bg-ink text-highlight px-2 py-1 border border-black font-mono font-black text-xs tracking-wider hover:bg-accent hover:text-white transition-colors"
+              className="inline-flex items-center gap-1 sm:gap-1.5 bg-ink text-highlight px-1.5 sm:px-2 py-0.5 sm:py-1 border border-black font-mono font-black text-[10px] sm:text-xs tracking-wider hover:bg-accent hover:text-white transition-colors"
               title="Copy invite code"
             >
               <span>{inviteCode || "——————"}</span>
-              <Copy className="w-3 h-3" />
+              <Copy className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
             </button>
             {copiedCode && (
               <span className="text-[10px] font-mono text-accent font-bold">
@@ -147,7 +154,7 @@ export default function CatDashboard({
 
         <button
           onClick={() => setIsAddCatOpen(true)}
-          className="punk-button w-full sm:w-auto bg-highlight text-black px-3.5 py-2 sm:py-1.5 text-xs font-black flex items-center justify-center sm:justify-start gap-1 hover:bg-highlight-hover shrink-0"
+          className="punk-button w-full sm:w-auto bg-highlight text-black px-3 py-2 sm:py-1.5 text-xs font-black flex items-center justify-center sm:justify-start gap-1 hover:bg-highlight-hover shrink-0"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>ADD CAT</span>
@@ -163,7 +170,7 @@ export default function CatDashboard({
       )}
 
       <div
-        className={`grid gap-4 sm:gap-6 ${activeCats.length === 1
+        className={`grid gap-3 sm:gap-6 ${activeCats.length === 1
             ? "grid-cols-1 max-w-xl mx-auto"
             : activeCats.length === 2
               ? "grid-cols-1 md:grid-cols-2"
@@ -175,18 +182,21 @@ export default function CatDashboard({
             key={cat._id}
             className="bg-paper-card border-3 border-black shadow-[4px_4px_0px_0px_var(--ink)] sm:shadow-[6px_6px_0px_0px_var(--ink)] flex flex-col justify-between overflow-hidden"
           >
-            <div className="bg-paper border-b-3 border-black px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2">
-              <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight text-black truncate">
+            {/* Header — always top */}
+            <div className="bg-paper border-b-3 border-black px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2">
+              <h2 className="text-base sm:text-xl font-black uppercase tracking-tight text-black truncate">
                 {cat.name}
               </h2>
-              <span className="font-mono text-xs font-black bg-ink text-highlight px-2 py-0.5 border border-black shrink-0">
+              <span className="font-mono text-[10px] sm:text-xs font-black bg-ink text-highlight px-1.5 sm:px-2 py-0.5 border border-black shrink-0">
                 {cat.completionPercentage}%
               </span>
             </div>
 
+            {/* Silhouette — visible on desktop, top position */}
+            {/* On mobile it's hidden here and appears at the bottom */}
             <div
               onClick={() => setSelectedCatForDetail(cat)}
-              className="p-3 sm:p-5 bg-paper border-b-3 border-black flex flex-col items-center justify-center relative cursor-pointer group hover:bg-paper-hover transition-colors"
+              className="hidden md:flex p-5 bg-paper border-b-3 border-black flex-col items-center justify-center relative cursor-pointer group hover:bg-paper-hover transition-colors"
               title="Click to view details and activity log"
             >
               <JaggedCatSilhouette
@@ -196,14 +206,14 @@ export default function CatDashboard({
                 totalRequired={cat.totalFrequency}
                 photoUrl={cat.photoUrl}
               />
-
               <div className="mt-2 text-[10px] font-mono font-bold text-ink-muted group-hover:text-black flex items-center gap-1 transition-colors">
                 <span>tap for details</span>
                 <ExternalLink className="w-2.5 h-2.5" />
               </div>
             </div>
 
-            <div className="p-3 sm:p-4 bg-white flex-1 flex flex-col justify-between">
+            {/* Tasks — visible on mobile first */}
+            <div className="p-2.5 sm:p-4 bg-white flex-1 flex flex-col justify-between">
               <div className="space-y-1.5 sm:space-y-2">
                 {cat.tasks.map((task) => {
                   const completed = task.completedCount || 0;
@@ -215,17 +225,17 @@ export default function CatDashboard({
                     <div
                       key={task._id}
                       onClick={() => handleToggleTask(cat._id, task)}
-                      className={`cursor-pointer border-2 border-black p-2.5 flex items-center justify-between transition-all select-none relative min-h-[44px] ${task.isDone
+                      className={`cursor-pointer border-2 border-black p-2 sm:p-2.5 flex items-center justify-between transition-all select-none relative min-h-[44px] ${task.isDone
                           ? "bg-paper text-ink-muted"
                           : started
                             ? "bg-highlight/20 hover:border-black shadow-[2px_2px_0_0_var(--ink)]"
                             : "bg-white text-black hover:border-black shadow-[2px_2px_0_0_var(--ink)]"
                         }`}
                     >
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
                         {isCounter ? (
                           <div
-                            className={`min-w-[44px] h-7 px-2 border-2 border-black flex items-center justify-center font-mono font-black text-[11px] transition-colors shrink-0 ${task.isDone
+                            className={`min-w-[40px] sm:min-w-[44px] h-7 px-1.5 sm:px-2 border-2 border-black flex items-center justify-center font-mono font-black text-[10px] sm:text-[11px] transition-colors shrink-0 ${task.isDone
                                 ? "bg-ink text-highlight"
                                 : started
                                   ? "bg-highlight text-black"
@@ -249,7 +259,7 @@ export default function CatDashboard({
 
                         <div className="min-w-0 flex-1">
                           <p
-                            className={`font-mono text-xs font-bold uppercase tracking-tight truncate ${task.isDone
+                            className={`font-mono text-[11px] sm:text-xs font-bold uppercase tracking-tight truncate ${task.isDone
                                 ? "line-through text-zinc-400"
                                 : "text-black"
                               }`}
@@ -257,7 +267,7 @@ export default function CatDashboard({
                             {task.title}
                           </p>
                           {task.lastLoggedBy && (
-                            <p className="text-[10px] font-mono text-accent font-bold truncate">
+                            <p className="text-[9px] sm:text-[10px] font-mono text-accent font-bold truncate">
                               {task.lastLoggedBy}
                               {timeDisplay ? ` • ${timeDisplay}` : ""}
                             </p>
@@ -266,7 +276,7 @@ export default function CatDashboard({
                       </div>
 
                       {started && (
-                        <span className="shrink-0 ml-2 font-mono text-[9px] font-black uppercase bg-highlight text-black border border-black px-1.5 py-0.5">
+                        <span className="shrink-0 ml-1.5 font-mono text-[8px] sm:text-[9px] font-black uppercase bg-highlight text-black border border-black px-1 sm:px-1.5 py-0.5">
                           In progress
                         </span>
                       )}
@@ -275,22 +285,51 @@ export default function CatDashboard({
                 })}
               </div>
             </div>
+
+            {/* Compact silhouette strip — mobile only, at bottom */}
+            <div
+              onClick={() => setSelectedCatForDetail(cat)}
+              className="md:hidden bg-paper border-t-3 border-black px-3 py-2 flex items-center justify-between cursor-pointer hover:bg-paper-hover transition-colors"
+              title="Tap for details and activity log"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-12 h-12 shrink-0">
+                  <JaggedCatSilhouette
+                    catName={cat.name}
+                    completionPercentage={cat.completionPercentage}
+                    completedCount={cat.completedCount}
+                    totalRequired={cat.totalFrequency}
+                    photoUrl={cat.photoUrl}
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-mono font-bold uppercase text-black truncate">
+                    {cat.completedCount}/{cat.totalFrequency} done
+                  </p>
+                  <p className="text-[9px] font-mono text-ink-muted flex items-center gap-1">
+                    view details
+                    <ExternalLink className="w-2 h-2" />
+                  </p>
+                </div>
+              </div>
+              <ChevronRightIcon />
+            </div>
           </div>
         ))}
       </div>
 
       {onRequestLeave && (
-        <div className="pt-4 border-t-2 border-black/20">
-          <div className="bg-white border-3 border-black p-4 sm:p-5 shadow-[4px_4px_0_0_var(--ink)]">
-            <div className="flex items-start gap-3 mb-3">
-              <div className="w-8 h-8 bg-accent text-white flex items-center justify-center border-2 border-black shrink-0">
-                <AlertTriangle className="w-4 h-4" />
+        <div className="pt-3 sm:pt-4 border-t-2 border-black/20">
+          <div className="bg-white border-3 border-black p-3 sm:p-5 shadow-[4px_4px_0_0_var(--ink)]">
+            <div className="flex items-start gap-2.5 sm:gap-3 mb-2.5 sm:mb-3">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-accent text-white flex items-center justify-center border-2 border-black shrink-0">
+                <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
               <div>
-                <h3 className="font-mono font-black uppercase text-black text-sm">
+                <h3 className="font-mono font-black uppercase text-black text-xs sm:text-sm">
                   Danger Zone
                 </h3>
-                <p className="text-[11px] font-mono text-ink-muted mt-0.5">
+                <p className="text-[10px] sm:text-[11px] font-mono text-ink-muted mt-0.5">
                   Leaving removes you from this household. Cat-care history stays
                   with the crew.
                 </p>
@@ -328,5 +367,20 @@ export default function CatDashboard({
         onClose={() => setIsAddCatOpen(false)}
       />
     </div>
+  );
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg
+      className="w-4 h-4 shrink-0 text-ink-muted"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      strokeWidth="3"
+      strokeLinecap="square"
+    >
+      <path d="M9 6l6 6-6 6" />
+    </svg>
   );
 }

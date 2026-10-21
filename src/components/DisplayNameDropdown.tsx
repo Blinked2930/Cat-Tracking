@@ -125,34 +125,34 @@ export default function DisplayNameDropdown() {
 
   return (
     <div ref={ref} className="relative">
-      {/* Trigger button — avatar chip + name */}
+      {/* Trigger — avatar only on mobile, avatar + name on sm+ */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className={`flex items-center gap-2 px-1.5 py-1 border-2 transition-all max-w-[200px] ${needsName
+        className={`flex items-center gap-1.5 sm:gap-2 px-1 sm:px-1.5 py-1 border-2 transition-all ${needsName
             ? "bg-highlight text-black border-black"
             : "text-paper border-transparent hover:border-zinc-700"
           }`}
+        aria-label={needsName ? "Set your name" : `Signed in as ${activeName}`}
       >
         <span
-          className={`w-6 h-6 flex items-center justify-center border-2 font-mono font-black text-xs shrink-0 ${needsName
+          className={`w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center border-2 font-mono font-black text-xs shrink-0 ${needsName
               ? "bg-black text-highlight border-black"
               : "bg-highlight text-black border-black"
             }`}
         >
           {initial}
         </span>
-        <span className="font-mono font-bold text-xs truncate">
-          {needsName ? "Set your name" : activeName}
+        <span className="hidden sm:inline font-mono font-bold text-xs truncate max-w-[120px]">
+          {needsName ? "Set name" : activeName}
         </span>
         <ChevronDown
-          className={`w-3 h-3 shrink-0 transition-transform ${open ? "rotate-180" : ""
+          className={`hidden sm:inline w-3 h-3 shrink-0 transition-transform ${open ? "rotate-180" : ""
             }`}
         />
       </button>
 
       {open && (
         <div className="absolute right-0 top-full mt-2 z-50 w-64 bg-paper border-4 border-black shadow-[6px_6px_0_0_var(--ink)]">
-          {/* Header band */}
           <div className="bg-ink text-paper px-3 py-2 border-b-3 border-black flex items-center justify-between">
             <span className="font-mono font-black uppercase text-[10px] tracking-wider">
               {needsName ? "Set Name" : "Displayed As"}
@@ -179,9 +179,7 @@ export default function DisplayNameDropdown() {
                 return (
                   <div
                     key={name}
-                    className={`group flex items-center justify-between gap-1 px-2 py-1.5 border-b border-black/10 last:border-b-0 ${isActive
-                        ? "bg-highlight/40"
-                        : "hover:bg-paper-hover"
+                    className={`group flex items-center justify-between gap-1 px-2 py-1.5 border-b border-black/10 last:border-b-0 ${isActive ? "bg-highlight/40" : "hover:bg-paper-hover"
                       }`}
                   >
                     <button

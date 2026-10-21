@@ -11,8 +11,9 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "StraySync // Punk Cat Tracker",
-  description: "Gritty, real-time cat care tracker for punk squats & roommates.",
+  title: "StraySync // Cat Care Tracker",
+  description:
+    "Real-time cat care tracker for roommates and shared households.",
   applicationName: "StraySync",
   appleWebApp: {
     capable: true,

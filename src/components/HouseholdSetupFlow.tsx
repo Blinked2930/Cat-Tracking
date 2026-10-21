@@ -1,14 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import {
-  Plus,
-  Trash2,
-  Upload,
-  Code,
-} from "lucide-react";
+import { Plus, Trash2, Upload, Code, ChevronDown, Check } from "lucide-react";
 
 interface TaskFormItem {
   id: string;
@@ -26,6 +21,79 @@ interface CatFormItem {
   photoPreview?: string | null;
   photoStorageId?: string | null;
   tasks: TaskFormItem[];
+}
+
+const FREQUENCY_OPTIONS = [1, 2, 3, 4, 5] as const;
+
+function PunkDropdown<T extends string | number>({
+  value,
+  onChange,
+  options,
+  className = "",
+}: {
+  value: T;
+  onChange: (value: T) => void;
+  options: ReadonlyArray<{ value: T; label: string }>;
+  className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const selected = options.find((o) => o.value === value);
+
+  return (
+    <div ref={ref} className={`relative ${className}`}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full bg-white border border-black px-2 py-1 text-xs font-mono font-bold text-black flex items-center justify-between gap-1 hover:bg-paper"
+      >
+        <span className="truncate">{selected?.label ?? "—"}</span>
+        <ChevronDown
+          className={`w-3 h-3 shrink-0 transition-transform ${open ? "rotate-180" : ""
+            }`}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute z-30 mt-1 w-full min-w-[7rem] bg-white border-2 border-black shadow-[3px_3px_0_0_var(--ink)]">
+          {options.map((opt) => (
+            <button
+              key={String(opt.value)}
+              type="button"
+              onClick={() => {
+                onChange(opt.value);
+                setOpen(false);
+              }}
+              className={`w-full text-left px-2 py-1.5 text-xs font-mono font-bold flex items-center justify-between gap-1 hover:bg-highlight ${opt.value === value ? "bg-paper" : ""
+                }`}
+            >
+              <span className="truncate">{opt.label}</span>
+              {opt.value === value && <Check className="w-3 h-3 shrink-0" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function HouseholdSetupFlow({
@@ -282,17 +350,16 @@ export default function HouseholdSetupFlow({
 
   return (
     <div className="w-full max-w-3xl mx-auto">
-      <div className="border-b-3 border-black pb-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      <div className="border-b-3 border-black pb-4 mb-5 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black">
+          <h2 className="text-xl sm:text-3xl font-black uppercase tracking-tight text-black">
             ADD HOUSEHOLD CATS
           </h2>
-          <p className="text-xs font-mono text-ink-muted mt-1">
+          <p className="text-[11px] sm:text-xs font-mono text-ink-muted mt-1">
             Register your cats and their daily care routines.
           </p>
         </div>
-
-        <div className="text-xs font-mono font-bold text-ink-muted">
+        <div className="text-[10px] sm:text-xs font-mono font-bold text-ink-muted">
           HOUSEHOLD:{" "}
           <span className="text-black font-mono font-bold">{householdName}</span>
           {" • "}
@@ -302,27 +369,32 @@ export default function HouseholdSetupFlow({
 
       {statusMessage && (
         <div
-          className={`mb-5 p-3 border-2 border-black text-xs font-mono font-bold flex items-center justify-between ${statusMessage.type === "error"
+          className={`mb-5 p-3 border-2 border-black text-xs font-mono font-bold flex items-center justify-between gap-2 ${statusMessage.type === "error"
               ? "bg-accent text-white"
               : "bg-highlight text-black"
             }`}
         >
-          <span>{statusMessage.text}</span>
-          <button onClick={() => setStatusMessage(null)}>✕</button>
+          <span className="min-w-0 break-words">{statusMessage.text}</span>
+          <button
+            onClick={() => setStatusMessage(null)}
+            className="shrink-0"
+            aria-label="Dismiss"
+          >
+            ✕
+          </button>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         {cats.map((cat, catIdx) => (
           <div
             key={cat.id}
-            className="bg-paper-card border-3 border-black p-5 shadow-[4px_4px_0px_0px_var(--ink)] space-y-4"
+            className="bg-paper-card border-3 border-black p-3 sm:p-5 shadow-[4px_4px_0px_0px_var(--ink)] space-y-3 sm:space-y-4"
           >
             <div className="flex items-center justify-between border-b-2 border-black/20 pb-3">
-              <span className="font-mono font-black text-base uppercase text-black">
+              <span className="font-mono font-black text-sm sm:text-base uppercase text-black">
                 Cat #{catIdx + 1}
               </span>
-
               {cats.length > 1 && (
                 <button
                   type="button"
@@ -335,23 +407,22 @@ export default function HouseholdSetupFlow({
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 sm:gap-4">
               <div className="sm:col-span-8">
-                <label className="block text-xs font-mono font-bold uppercase text-black mb-1">
+                <label className="block text-[10px] font-mono font-bold uppercase text-black mb-1">
                   Cat Name
                 </label>
                 <input
                   type="text"
                   value={cat.name}
                   onChange={(e) => handleUpdateCatName(cat.id, e.target.value)}
-                  placeholder="e.g. Iggy Pop, Dexter"
+                  placeholder="e.g. Iggy, Dexter"
                   required
                   className="w-full bg-white border-2 border-black p-2.5 font-mono font-bold text-sm text-black uppercase focus:outline-none focus:border-accent"
                 />
               </div>
-
               <div className="sm:col-span-4">
-                <label className="block text-xs font-mono font-bold uppercase text-black mb-1">
+                <label className="block text-[10px] font-mono font-bold uppercase text-black mb-1">
                   Photo (Optional)
                 </label>
                 <div className="border-2 border-dashed border-black bg-white p-2 text-center flex items-center justify-center min-h-[46px]">
@@ -396,15 +467,15 @@ export default function HouseholdSetupFlow({
               </div>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-1 sm:pt-2">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-mono font-bold uppercase text-black">
+                <span className="text-[10px] sm:text-xs font-mono font-bold uppercase text-black">
                   Daily Routines
                 </span>
                 <button
                   type="button"
                   onClick={() => handleAddTask(cat.id)}
-                  className="text-xs font-mono font-bold text-black hover:text-accent flex items-center gap-1"
+                  className="text-[11px] sm:text-xs font-mono font-bold text-black hover:text-accent flex items-center gap-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add Chore</span>
@@ -415,9 +486,9 @@ export default function HouseholdSetupFlow({
                 {cat.tasks.map((task) => (
                   <div
                     key={task.id}
-                    className="bg-white border-2 border-black p-3 space-y-2"
+                    className="bg-white border-2 border-black p-2.5 sm:p-3 space-y-2"
                   >
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                    <div className="flex flex-col gap-2">
                       <input
                         type="text"
                         value={task.title}
@@ -428,10 +499,10 @@ export default function HouseholdSetupFlow({
                         }
                         placeholder="Chore title (e.g. Kibble, Insulin)"
                         required
-                        className="w-full sm:flex-1 bg-paper border border-black p-1.5 font-mono text-xs font-bold uppercase focus:outline-none"
+                        className="w-full bg-paper border border-black p-1.5 font-mono text-xs font-bold uppercase focus:outline-none"
                       />
 
-                      <div className="flex items-center gap-2 self-end sm:self-auto">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <div className="flex border border-black text-xs font-mono">
                           <button
                             type="button"
@@ -440,7 +511,7 @@ export default function HouseholdSetupFlow({
                                 type: "checkbox",
                               })
                             }
-                            className={`px-2 py-0.5 font-bold ${task.type === "checkbox"
+                            className={`px-2 py-1 font-bold ${task.type === "checkbox"
                                 ? "bg-ink text-white"
                                 : "bg-white text-black"
                               }`}
@@ -454,7 +525,7 @@ export default function HouseholdSetupFlow({
                                 type: "counter",
                               })
                             }
-                            className={`px-2 py-0.5 font-bold border-l border-black ${task.type === "counter"
+                            className={`px-2 py-1 font-bold border-l border-black ${task.type === "counter"
                                 ? "bg-ink text-highlight"
                                 : "bg-white text-black"
                               }`}
@@ -463,31 +534,32 @@ export default function HouseholdSetupFlow({
                           </button>
                         </div>
 
-                        <select
+                        <PunkDropdown
                           value={task.frequency}
-                          onChange={(e) =>
+                          onChange={(v) =>
                             handleUpdateTask(cat.id, task.id, {
-                              frequency: Number(e.target.value),
+                              frequency: v,
                             })
                           }
-                          className="border border-black bg-white p-1 text-xs font-mono font-bold"
-                        >
-                          <option value={1}>1x / day</option>
-                          <option value={2}>2x / day</option>
-                          <option value={3}>3x / day</option>
-                        </select>
+                          options={FREQUENCY_OPTIONS.map((f) => ({
+                            value: f,
+                            label: `${f}x / day`,
+                          }))}
+                          className="w-28"
+                        />
 
                         <button
                           type="button"
                           onClick={() => handleRemoveTask(cat.id, task.id)}
-                          className="p-1 text-red-600 hover:text-black"
+                          className="p-1.5 text-red-600 hover:text-black ml-auto"
+                          aria-label="Remove chore"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
 
-                    <div className="pt-1">
+                    <div>
                       <button
                         type="button"
                         onClick={() =>
@@ -526,11 +598,11 @@ export default function HouseholdSetupFlow({
           </div>
         ))}
 
-        <div className="flex items-center justify-between pt-2">
+        <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
           <button
             type="button"
             onClick={handleAddCat}
-            className="punk-button bg-white text-black py-2.5 px-4 text-xs font-bold flex items-center gap-1.5 hover:bg-zinc-100"
+            className="punk-button bg-white text-black py-2.5 px-4 text-xs font-bold flex items-center justify-center sm:justify-start gap-1.5 hover:bg-zinc-100"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Another Cat</span>
@@ -539,7 +611,7 @@ export default function HouseholdSetupFlow({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="punk-button bg-accent text-white py-2.5 px-6 text-xs font-bold flex items-center gap-1.5 hover:bg-accent-hover"
+            className="punk-button bg-accent text-white py-2.5 px-6 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span>
               {isSubmitting ? "Saving..." : "Save & Open Dashboard ➔"}

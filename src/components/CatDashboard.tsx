@@ -35,7 +35,6 @@ interface CatBlockData {
 function isRealConvexId(id: string | undefined | null): boolean {
   if (!id) return false;
   if (id.startsWith("mock-")) return false;
-  if (id === "squat-bedford") return false;
   return id.length >= 20;
 }
 
@@ -107,14 +106,14 @@ export default function CatDashboard({
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b-2 border-black/20">
-        <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black">
+    <div className="w-full max-w-6xl mx-auto space-y-5 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b-2 border-black/20">
+        <h1 className="text-xl sm:text-3xl font-black uppercase tracking-tight text-black truncate">
           {householdName}
         </h1>
         <button
           onClick={() => setIsAddCatOpen(true)}
-          className="punk-button bg-highlight text-black px-3.5 py-1.5 text-xs font-black flex items-center gap-1 hover:bg-highlight-hover"
+          className="punk-button w-full sm:w-auto bg-highlight text-black px-3.5 py-2 sm:py-1.5 text-xs font-black flex items-center justify-center sm:justify-start gap-1 hover:bg-highlight-hover"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>ADD CAT</span>
@@ -122,7 +121,7 @@ export default function CatDashboard({
       </div>
 
       {activeCats.length === 0 && (
-        <div className="text-center py-16 border-3 border-dashed border-black/20 bg-white/50">
+        <div className="text-center py-16 px-4 border-3 border-dashed border-black/20 bg-white/50">
           <p className="font-mono text-sm text-ink-muted">
             No cats yet. Tap <strong>ADD CAT</strong> to get started.
           </p>
@@ -130,7 +129,7 @@ export default function CatDashboard({
       )}
 
       <div
-        className={`grid gap-6 ${activeCats.length === 1
+        className={`grid gap-4 sm:gap-6 ${activeCats.length === 1
             ? "grid-cols-1 max-w-xl mx-auto"
             : activeCats.length === 2
               ? "grid-cols-1 md:grid-cols-2"
@@ -140,10 +139,10 @@ export default function CatDashboard({
         {activeCats.map((cat) => (
           <div
             key={cat._id}
-            className="bg-paper-card border-3 border-black shadow-[6px_6px_0px_0px_var(--ink)] flex flex-col justify-between overflow-hidden"
+            className="bg-paper-card border-3 border-black shadow-[4px_4px_0px_0px_var(--ink)] sm:shadow-[6px_6px_0px_0px_var(--ink)] flex flex-col justify-between overflow-hidden"
           >
-            <div className="bg-paper border-b-3 border-black px-4 py-3 flex items-center justify-between">
-              <h2 className="text-xl font-black uppercase tracking-tight text-black truncate">
+            <div className="bg-paper border-b-3 border-black px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+              <h2 className="text-lg sm:text-xl font-black uppercase tracking-tight text-black truncate">
                 {cat.name}
               </h2>
               <span className="font-mono text-xs font-black bg-ink text-highlight px-2 py-0.5 border border-black shrink-0">
@@ -153,7 +152,7 @@ export default function CatDashboard({
 
             <div
               onClick={() => setSelectedCatForDetail(cat)}
-              className="p-5 bg-paper border-b-3 border-black flex flex-col items-center justify-center relative cursor-pointer group hover:bg-paper-hover transition-colors"
+              className="p-3 sm:p-5 bg-paper border-b-3 border-black flex flex-col items-center justify-center relative cursor-pointer group hover:bg-paper-hover transition-colors"
               title="Click to view details and activity log"
             >
               <JaggedCatSilhouette
@@ -170,8 +169,8 @@ export default function CatDashboard({
               </div>
             </div>
 
-            <div className="p-4 bg-white flex-1 flex flex-col justify-between">
-              <div className="space-y-2">
+            <div className="p-3 sm:p-4 bg-white flex-1 flex flex-col justify-between">
+              <div className="space-y-1.5 sm:space-y-2">
                 {cat.tasks.map((task) => {
                   const completed = task.completedCount || 0;
                   const isCounter = task.type === "counter";
@@ -182,7 +181,7 @@ export default function CatDashboard({
                     <div
                       key={task._id}
                       onClick={() => handleToggleTask(cat._id, task)}
-                      className={`cursor-pointer border-2 border-black p-2.5 flex items-center justify-between transition-all select-none relative ${task.isDone
+                      className={`cursor-pointer border-2 border-black p-2.5 flex items-center justify-between transition-all select-none relative min-h-[44px] ${task.isDone
                           ? "bg-paper text-ink-muted"
                           : started
                             ? "bg-highlight/20 hover:border-black shadow-[2px_2px_0_0_var(--ink)]"
@@ -227,7 +226,6 @@ export default function CatDashboard({
                         </div>
                       </div>
 
-                      {/* "Started" badge for counters not yet complete */}
                       {started && (
                         <span className="shrink-0 ml-2 font-mono text-[9px] font-black uppercase bg-highlight text-black border border-black px-1.5 py-0.5">
                           In progress

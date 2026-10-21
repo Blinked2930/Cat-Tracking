@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useUser, UserButton } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import OnboardingFlow from "@/components/OnboardingFlow";
@@ -104,12 +104,7 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            {clerkUser && (
-              <>
-                <DisplayNameDropdown />
-                <UserButton />
-              </>
-            )}
+            {clerkUser && <DisplayNameDropdown />}
           </div>
         </div>
       </header>

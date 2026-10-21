@@ -2,12 +2,13 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
 import { api } from "../../convex/_generated/api";
-import { Check, ChevronDown, Plus, Trash2 } from "lucide-react";
+import { Check, ChevronDown, Plus, Trash2, LogOut } from "lucide-react";
 
 export default function DisplayNameDropdown() {
   const { user: clerkUser } = useUser();
+  const { signOut } = useClerk();
   const currentUserData = useQuery(
     api.users.currentUser,
     clerkUser?.id ? { clerkId: clerkUser.id } : "skip"
@@ -121,32 +122,40 @@ export default function DisplayNameDropdown() {
     }
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut({ redirectUrl: "/" });
+    } catch {
+      // signOut failure — no-op, user can retry
+    }
+  };
+
   const initial = needsName ? "?" : activeName.trim().charAt(0).toUpperCase();
 
   return (
     <div ref={ref} className="relative">
-      {/* Trigger — avatar only on mobile, avatar + name on sm+ */}
+      {/* Trigger — always shows name text, larger tap target */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className={`flex items-center gap-1.5 sm:gap-2 px-1 sm:px-1.5 py-1 border-2 transition-all ${needsName
+        className={`flex items-center gap-2 px-2 py-1.5 border-2 transition-all ${needsName
             ? "bg-highlight text-black border-black"
-            : "text-paper border-transparent hover:border-zinc-700"
+            : "bg-black text-paper border-zinc-700 hover:border-zinc-500"
           }`}
         aria-label={needsName ? "Set your name" : `Signed in as ${activeName}`}
       >
         <span
-          className={`w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center border-2 font-mono font-black text-xs shrink-0 ${needsName
+          className={`w-7 h-7 flex items-center justify-center border-2 font-mono font-black text-xs shrink-0 ${needsName
               ? "bg-black text-highlight border-black"
               : "bg-highlight text-black border-black"
             }`}
         >
           {initial}
         </span>
-        <span className="hidden sm:inline font-mono font-bold text-xs truncate max-w-[120px]">
+        <span className="font-mono font-bold text-xs truncate max-w-[100px] sm:max-w-[140px]">
           {needsName ? "Set name" : activeName}
         </span>
         <ChevronDown
-          className={`hidden sm:inline w-3 h-3 shrink-0 transition-transform ${open ? "rotate-180" : ""
+          className={`w-3.5 h-3.5 shrink-0 transition-transform ${open ? "rotate-180" : ""
             }`}
         />
       </button>
@@ -270,6 +279,15 @@ export default function DisplayNameDropdown() {
               Add new name
             </button>
           )}
+
+          {/* Sign out — always visible at the bottom */}
+          <button
+            onClick={handleSignOut}
+            className="w-full px-2 py-2 border-t-2 border-black text-[10px] font-mono font-black uppercase text-red-600 hover:bg-accent hover:text-white flex items-center justify-center gap-1.5 transition-colors"
+          >
+            <LogOut className="w-3 h-3" />
+            Sign Out
+          </button>
         </div>
       )}
     </div>

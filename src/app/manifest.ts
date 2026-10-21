@@ -2,9 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "StraySync - Punk Cat Care PWA",
-    short_name: "StraySync",
-    description: "A gritty, punk-sketch real-time cat care tracker for roommates.",
+    name: "CatSync - Cat Care PWA",
+    short_name: "CatSync",
+    description:
+      "A gritty, punk-sketch real-time cat care tracker for roommates.",
     start_url: "/",
     display: "standalone",
     background_color: "#EDECE7",

@@ -99,7 +99,7 @@ export default function Home() {
               🐾
             </span>
             <span className="font-black tracking-tight text-lg uppercase text-white truncate">
-              STRAYSYNC
+              CATSYNC
             </span>
           </div>
 
@@ -142,7 +142,7 @@ export default function Home() {
       <footer className="w-full border-t-2 border-black/20 pt-4 px-4">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-[11px] font-mono font-bold text-ink-muted uppercase tracking-wide text-center sm:text-left">
-            STRAYSYNC • REAL-TIME CAT CARE FOR ROOMMATES
+            CATSYNC • REAL-TIME CAT CARE FOR ROOMMATES
           </p>
           <button
             onClick={() => setShowInstallModal(true)}

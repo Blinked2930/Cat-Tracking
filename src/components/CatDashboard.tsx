@@ -182,7 +182,6 @@ export default function CatDashboard({
             key={cat._id}
             className="bg-paper-card border-3 border-black shadow-[4px_4px_0px_0px_var(--ink)] sm:shadow-[6px_6px_0px_0px_var(--ink)] flex flex-col justify-between overflow-hidden"
           >
-            {/* Header — always top */}
             <div className="bg-paper border-b-3 border-black px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2">
               <h2 className="text-base sm:text-xl font-black uppercase tracking-tight text-black truncate">
                 {cat.name}
@@ -192,8 +191,6 @@ export default function CatDashboard({
               </span>
             </div>
 
-            {/* Silhouette — visible on desktop, top position */}
-            {/* On mobile it's hidden here and appears at the bottom */}
             <div
               onClick={() => setSelectedCatForDetail(cat)}
               className="hidden md:flex p-5 bg-paper border-b-3 border-black flex-col items-center justify-center relative cursor-pointer group hover:bg-paper-hover transition-colors"
@@ -212,7 +209,6 @@ export default function CatDashboard({
               </div>
             </div>
 
-            {/* Tasks — visible on mobile first */}
             <div className="p-2.5 sm:p-4 bg-white flex-1 flex flex-col justify-between">
               <div className="space-y-1.5 sm:space-y-2">
                 {cat.tasks.map((task) => {
@@ -286,29 +282,26 @@ export default function CatDashboard({
               </div>
             </div>
 
-            {/* Compact silhouette strip — mobile only, at bottom */}
             <div
               onClick={() => setSelectedCatForDetail(cat)}
-              className="md:hidden bg-paper border-t-3 border-black px-3 py-2 flex items-center justify-between cursor-pointer hover:bg-paper-hover transition-colors"
+              className="md:hidden bg-paper border-t-3 border-black px-3 py-2.5 flex items-center justify-between cursor-pointer hover:bg-paper-hover transition-colors active:bg-paper-card"
               title="Tap for details and activity log"
             >
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="w-12 h-12 shrink-0">
-                  <JaggedCatSilhouette
-                    catName={cat.name}
-                    completionPercentage={cat.completionPercentage}
-                    completedCount={cat.completedCount}
-                    totalRequired={cat.totalFrequency}
-                    photoUrl={cat.photoUrl}
-                  />
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-11 h-11 shrink-0 bg-ink border-2 border-black flex flex-col items-center justify-center">
+                  <span className="font-mono font-black text-highlight text-xs leading-none">
+                    {cat.completionPercentage}%
+                  </span>
+                  <span className="font-mono font-black text-paper text-[8px] leading-none mt-0.5">
+                    {cat.completedCount}/{cat.totalFrequency}
+                  </span>
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-mono font-bold uppercase text-black truncate">
-                    {cat.completedCount}/{cat.totalFrequency} done
+                  <p className="text-[11px] font-mono font-bold uppercase text-black">
+                    View details
                   </p>
-                  <p className="text-[9px] font-mono text-ink-muted flex items-center gap-1">
-                    view details
-                    <ExternalLink className="w-2 h-2" />
+                  <p className="text-[9px] font-mono text-ink-muted">
+                    Tap for activity log
                   </p>
                 </div>
               </div>
@@ -319,29 +312,28 @@ export default function CatDashboard({
       </div>
 
       {onRequestLeave && (
-        <div className="pt-3 sm:pt-4 border-t-2 border-black/20">
-          <div className="bg-white border-3 border-black p-3 sm:p-5 shadow-[4px_4px_0_0_var(--ink)]">
-            <div className="flex items-start gap-2.5 sm:gap-3 mb-2.5 sm:mb-3">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-accent text-white flex items-center justify-center border-2 border-black shrink-0">
-                <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              </div>
-              <div>
-                <h3 className="font-mono font-black uppercase text-black text-xs sm:text-sm">
-                  Danger Zone
-                </h3>
-                <p className="text-[10px] sm:text-[11px] font-mono text-ink-muted mt-0.5">
-                  Leaving removes you from this household. Cat-care history stays
-                  with the crew.
-                </p>
-              </div>
-            </div>
-
+        <div className="pt-2 sm:pt-4">
+          <div className="bg-paper-card border-3 border-black shadow-[3px_3px_0_0_var(--ink)]">
             <button
               onClick={onRequestLeave}
-              className="punk-button w-full sm:w-auto bg-white text-accent border-[#A01AB1] py-2 px-4 text-xs font-bold flex items-center justify-center sm:justify-start gap-1.5 hover:bg-accent hover:text-white"
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between gap-2 hover:bg-paper-hover transition-colors"
             >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Leave Household</span>
+              <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                <span className="w-1.5 self-stretch bg-accent shrink-0" />
+                <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent shrink-0" />
+                <div className="min-w-0 text-left">
+                  <p className="font-mono font-black uppercase text-black text-[11px] sm:text-xs tracking-tight">
+                    Leave Household
+                  </p>
+                  <p className="text-[9px] sm:text-[10px] font-mono text-ink-muted truncate">
+                    Removes you from this household
+                  </p>
+                </div>
+              </div>
+              <span className="flex items-center gap-1 shrink-0 font-mono font-black text-[10px] sm:text-[11px] uppercase text-accent">
+                <LogOut className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                <span className="hidden sm:inline">Leave</span>
+              </span>
             </button>
           </div>
         </div>

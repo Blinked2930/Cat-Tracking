@@ -11,14 +11,14 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "StraySync // Cat Care Tracker",
+  title: "CatSync // Cat Care Tracker",
   description:
     "Real-time cat care tracker for roommates and shared households.",
-  applicationName: "StraySync",
+  applicationName: "CatSync",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "StraySync",
+    title: "CatSync",
   },
   formatDetection: {
     telephone: false,

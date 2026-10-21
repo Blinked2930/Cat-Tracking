@@ -171,8 +171,8 @@ export default function CatDashboard({
           className={`grid gap-3 sm:gap-5 ${activeCats.length === 1
               ? "grid-cols-1 max-w-md mx-auto"
               : activeCats.length === 2
-                ? "grid-cols-1 md:grid-cols-2 max-w-3xl mx-auto"
-                : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+                ? "grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto"
+                : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
             }`}
         >
           {activeCats.map((cat) => {
@@ -187,18 +187,18 @@ export default function CatDashboard({
                 className="group text-left bg-paper-card border-3 border-black shadow-[4px_4px_0px_0px_var(--ink)] sm:shadow-[6px_6px_0px_0px_var(--ink)] hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_var(--ink)] sm:hover:shadow-[8px_8px_0px_0px_var(--ink)] active:translate-y-0 active:shadow-[3px_3px_0px_0px_var(--ink)] transition-all overflow-hidden flex flex-col"
               >
                 {/* Header */}
-                <div className="bg-paper border-b-3 border-black px-3 py-2 flex items-center justify-between gap-2">
-                  <h2 className="text-base sm:text-xl font-black uppercase tracking-tight text-black truncate">
+                <div className="bg-paper border-b-3 border-black px-2.5 py-1.5 flex items-center justify-between gap-2">
+                  <h2 className="text-sm sm:text-lg font-black uppercase tracking-tight text-black truncate">
                     {cat.name}
                   </h2>
-                  <span className="font-mono text-[10px] sm:text-xs font-black bg-ink text-highlight px-2 py-0.5 border border-black shrink-0">
+                  <span className="font-mono text-[10px] sm:text-xs font-black bg-ink text-highlight px-1.5 py-0.5 border border-black shrink-0">
                     {cat.completionPercentage}%
                   </span>
                 </div>
 
-                {/* Silhouette hero */}
-                <div className="p-3 sm:p-5 bg-paper flex flex-col items-center justify-center flex-1">
-                  <div className="w-full max-w-[180px] sm:max-w-[220px]">
+                {/* Silhouette hero — smaller so two cards fit on mobile */}
+                <div className="p-2 sm:p-4 bg-paper flex flex-col items-center justify-center flex-1">
+                  <div className="w-full max-w-[100px] sm:max-w-[180px]">
                     <JaggedCatSilhouette
                       catName={cat.name}
                       completionPercentage={cat.completionPercentage}
@@ -210,7 +210,7 @@ export default function CatDashboard({
                 </div>
 
                 {/* Bottom strip — progress summary */}
-                <div className="bg-white border-t-3 border-black px-3 py-2 flex items-center justify-between gap-2 group-hover:bg-paper-hover transition-colors">
+                <div className="bg-white border-t-3 border-black px-2.5 py-1.5 flex items-center justify-between gap-2 group-hover:bg-paper-hover transition-colors">
                   <div className="min-w-0">
                     <p className="text-[10px] font-mono font-bold uppercase text-black leading-tight">
                       {cat.completedCount}/{cat.totalFrequency} done
@@ -280,7 +280,7 @@ export default function CatDashboard({
 function ChevronRightIcon() {
   return (
     <svg
-      className="w-4 h-4 shrink-0 text-ink-muted group-hover:text-black transition-colors"
+      className="w-3.5 h-3.5 shrink-0 text-ink-muted group-hover:text-black transition-colors"
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"

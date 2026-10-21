@@ -70,7 +70,6 @@ export const updateTask = mutation({
 
     if (args.type !== undefined) {
       patch.type = args.type;
-      // Checkboxes are always frequency 1
       if (args.type === "checkbox") {
         patch.frequency = 1;
       }
@@ -100,7 +99,6 @@ export const deleteTask = mutation({
     const task = await ctx.db.get(args.taskId);
     if (!task) throw new Error("Task not found");
 
-    // Delete logs for this task first (no direct index, so scan by task_and_date)
     const logs = await ctx.db
       .query("taskLogs")
       .withIndex("by_task_and_date", (q) => q.eq("taskId", args.taskId))
@@ -130,6 +128,7 @@ export const logTask = mutation({
     catId: v.id("cats"),
     dateString: v.string(),
     value: v.optional(v.number()),
+    notes: v.optional(v.string()),
     clerkId: v.optional(v.string()),
   },
   handler: async (
@@ -139,6 +138,7 @@ export const logTask = mutation({
       catId: Id<"cats">;
       dateString: string;
       value?: number;
+      notes?: string;
       clerkId?: string;
     }
   ) => {
@@ -154,6 +154,9 @@ export const logTask = mutation({
 
     if (!user) throw new Error("User record not found. Sync user first.");
 
+    // Trim notes and treat empty as undefined
+    const trimmedNotes = args.notes?.trim() || undefined;
+
     const logId = await ctx.db.insert("taskLogs", {
       taskId: args.taskId,
       catId: args.catId,
@@ -162,6 +165,7 @@ export const logTask = mutation({
       completedAt: Date.now(),
       dateString: args.dateString,
       value: args.value,
+      notes: trimmedNotes,
     });
 
     return logId;
@@ -244,6 +248,7 @@ export const getRecentHouseholdActivity = query({
           catName: catMap.get(log.catId.toString()) || "Cat",
           taskTitle: task?.title || "Daily Chore",
           userName: log.userNameSnapshot || user?.name || "Roommate",
+          notes: log.notes,
         };
       })
     );

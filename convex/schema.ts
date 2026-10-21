@@ -36,6 +36,7 @@ export default defineSchema({
     completedAt: v.number(),
     dateString: v.string(),
     value: v.optional(v.number()),
+    notes: v.optional(v.string()),
   })
     .index("by_task_and_date", ["taskId", "dateString"])
     .index("by_cat_and_date", ["catId", "dateString"]),

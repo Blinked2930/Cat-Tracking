@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import JaggedCatSilhouette from "./JaggedCatSilhouette";
 import EditCatModal from "./EditCatModal";
+import TaskNoteModal from "./TaskNoteModal";
 import { formatTime } from "@/lib/formatTime";
 import { Check, Clock, Edit3 } from "lucide-react";
 
@@ -40,6 +41,10 @@ interface CatDetailModalProps {
   onToggleTask?: (catId: string, task: CatDetailTask) => void;
 }
 
+interface PendingNote {
+  task: CatDetailTask;
+}
+
 export default function CatDetailModal({
   cat,
   isOpen,
@@ -49,6 +54,8 @@ export default function CatDetailModal({
   onToggleTask,
 }: CatDetailModalProps) {
   const [showEdit, setShowEdit] = useState(false);
+  const [pendingNote, setPendingNote] = useState<PendingNote | null>(null);
+  const [isSavingNote, setIsSavingNote] = useState(false);
 
   const isMock = !cat || cat._id.startsWith("cat-");
   const liveLogs = useQuery(
@@ -66,6 +73,7 @@ export default function CatDetailModal({
       id: log._id,
       text: `${log.userName || "Roommate"} logged "${log.taskTitle || "Chore"}"`,
       time: formatTime(log.completedAt),
+      notes: log.notes as string | undefined,
     }));
   }, [liveLogs]);
 
@@ -76,30 +84,70 @@ export default function CatDetailModal({
     Math.min(100, Math.round(cat.completionPercentage))
   );
 
+  const performLog = async (task: CatDetailTask, notes?: string) => {
+    if (!logTaskMutation || cat._id.startsWith("cat-")) return;
+    try {
+      await logTaskMutation({
+        taskId: task._id as any,
+        catId: cat._id as any,
+        dateString: todayString,
+        value:
+          task.type === "counter"
+            ? (task.completedCount || 0) + 1
+            : undefined,
+        notes,
+      });
+    } catch (err) {
+      console.error("Error logging task in modal:", err);
+    }
+  };
+
   const handleTaskClick = async (task: CatDetailTask) => {
     if (!logTaskMutation || !unlogTaskMutation || cat._id.startsWith("cat-")) {
       onToggleTask?.(cat._id, task);
       return;
     }
 
-    try {
-      if (task.isDone && task.logs && task.logs.length > 0) {
+    // Unchecking → no prompt
+    if (task.isDone && task.logs && task.logs.length > 0) {
+      try {
         const lastLog = task.logs[task.logs.length - 1];
         await unlogTaskMutation({ logId: lastLog._id });
-      } else {
-        await logTaskMutation({
-          taskId: task._id as any,
-          catId: cat._id as any,
-          dateString: todayString,
-          value:
-            task.type === "counter"
-              ? (task.completedCount || 0) + 1
-              : undefined,
-        });
+      } catch (err) {
+        console.error("Error unlogging task in modal:", err);
       }
-    } catch (err) {
-      console.error("Error logging task in modal:", err);
+      return;
     }
+
+    // Opening a note prompt for completing
+    setPendingNote({ task });
+  };
+
+  const handleNoteSkip = async () => {
+    if (!pendingNote) return;
+    setIsSavingNote(true);
+    try {
+      await performLog(pendingNote.task);
+    } finally {
+      setIsSavingNote(false);
+      setPendingNote(null);
+    }
+  };
+
+  const handleNoteSave = async (notes: string) => {
+    if (!pendingNote) return;
+    setIsSavingNote(true);
+    try {
+      await performLog(pendingNote.task, notes);
+    } finally {
+      setIsSavingNote(false);
+      setPendingNote(null);
+    }
+  };
+
+  const handleNoteCancel = () => {
+    if (isSavingNote) return;
+    setPendingNote(null);
   };
 
   return (
@@ -261,16 +309,20 @@ export default function CatDetailModal({
             </div>
 
             {timelineLogs.length > 0 ? (
-              <div className="font-mono text-xs space-y-1.5">
+              <div className="font-mono text-xs space-y-2">
                 {timelineLogs.map((log, idx) => (
-                  <div
-                    key={`${log.id}-${idx}`}
-                    className="flex items-center justify-between gap-2 text-zinc-700"
-                  >
-                    <span className="font-bold truncate">• {log.text}</span>
-                    <span className="text-[10px] text-zinc-400 shrink-0">
-                      {log.time}
-                    </span>
+                  <div key={`${log.id}-${idx}`} className="space-y-1">
+                    <div className="flex items-center justify-between gap-2 text-zinc-700">
+                      <span className="font-bold truncate">• {log.text}</span>
+                      <span className="text-[10px] text-zinc-400 shrink-0">
+                        {log.time}
+                      </span>
+                    </div>
+                    {log.notes && (
+                      <p className="text-[10px] font-mono text-ink-muted italic pl-3 border-l-2 border-accent/30">
+                        {log.notes}
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
@@ -291,6 +343,16 @@ export default function CatDetailModal({
           setShowEdit(false);
           onClose();
         }}
+      />
+
+      <TaskNoteModal
+        isOpen={pendingNote !== null}
+        taskTitle={pendingNote?.task.title || ""}
+        catName={cat.name}
+        onSkip={handleNoteSkip}
+        onSave={handleNoteSave}
+        onCancel={handleNoteCancel}
+        isSubmitting={isSavingNote}
       />
     </>
   );

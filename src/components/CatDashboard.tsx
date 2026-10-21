@@ -6,7 +6,9 @@ import { api } from "../../convex/_generated/api";
 import JaggedCatSilhouette from "./JaggedCatSilhouette";
 import CatSetupModal from "./CatSetupModal";
 import CatDetailModal from "./CatDetailModal";
+import { formatTime } from "@/lib/formatTime";
 import {
+  Check,
   Plus,
   ExternalLink,
   AlertTriangle,
@@ -157,7 +159,7 @@ export default function CatDashboard({
         </button>
       </div>
 
-      {/* Cats — tap to view tasks */}
+      {/* Cats with tasks */}
       <div className="space-y-2.5 sm:space-y-4">
         {activeCats.length === 0 && (
           <div className="text-center py-10 px-4 border-2 border-dashed border-black/20 bg-white/50">
@@ -169,67 +171,148 @@ export default function CatDashboard({
 
         <div
           className={`grid gap-3 sm:gap-5 ${activeCats.length === 1
-              ? "grid-cols-1 max-w-md mx-auto"
+              ? "grid-cols-1 max-w-xl mx-auto"
               : activeCats.length === 2
-                ? "grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto"
-                : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                ? "grid-cols-1 md:grid-cols-2"
+                : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
             }`}
         >
-          {activeCats.map((cat) => {
-            const pending = Math.max(
-              0,
-              cat.totalFrequency - cat.completedCount
-            );
-            return (
-              <button
-                key={cat._id}
+          {activeCats.map((cat) => (
+            <div
+              key={cat._id}
+              className="bg-paper-card border-3 border-black shadow-[4px_4px_0px_0px_var(--ink)] sm:shadow-[6px_6px_0px_0px_var(--ink)] flex flex-col justify-between overflow-hidden"
+            >
+              {/* Header */}
+              <div className="bg-paper border-b-3 border-black px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2">
+                <h2 className="text-base sm:text-xl font-black uppercase tracking-tight text-black truncate">
+                  {cat.name}
+                </h2>
+                <span className="font-mono text-[10px] sm:text-xs font-black bg-ink text-highlight px-1.5 sm:px-2 py-0.5 border border-black shrink-0">
+                  {cat.completionPercentage}%
+                </span>
+              </div>
+
+              {/* Silhouette — desktop only, hero position */}
+              <div
                 onClick={() => setSelectedCatForDetail(cat)}
-                className="group text-left bg-paper-card border-3 border-black shadow-[4px_4px_0px_0px_var(--ink)] sm:shadow-[6px_6px_0px_0px_var(--ink)] hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_var(--ink)] sm:hover:shadow-[8px_8px_0px_0px_var(--ink)] active:translate-y-0 active:shadow-[3px_3px_0px_0px_var(--ink)] transition-all overflow-hidden flex flex-col"
+                className="hidden md:flex p-4 bg-paper border-b-3 border-black flex-col items-center justify-center relative cursor-pointer group hover:bg-paper-hover transition-colors"
+                title="Click to view details and activity log"
               >
-                {/* Header */}
-                <div className="bg-paper border-b-3 border-black px-2.5 py-1.5 flex items-center justify-between gap-2">
-                  <h2 className="text-sm sm:text-lg font-black uppercase tracking-tight text-black truncate">
-                    {cat.name}
-                  </h2>
-                  <span className="font-mono text-[10px] sm:text-xs font-black bg-ink text-highlight px-1.5 py-0.5 border border-black shrink-0">
-                    {cat.completionPercentage}%
-                  </span>
+                <JaggedCatSilhouette
+                  catName={cat.name}
+                  completionPercentage={cat.completionPercentage}
+                  completedCount={cat.completedCount}
+                  totalRequired={cat.totalFrequency}
+                  photoUrl={cat.photoUrl}
+                />
+                <div className="mt-1.5 text-[10px] font-mono font-bold text-ink-muted group-hover:text-black flex items-center gap-1 transition-colors">
+                  <span>tap for details</span>
+                  <ExternalLink className="w-2.5 h-2.5" />
                 </div>
+              </div>
 
-                {/* Silhouette hero — smaller so two cards fit on mobile */}
-                <div className="p-2 sm:p-4 bg-paper flex flex-col items-center justify-center flex-1">
-                  <div className="w-full max-w-[100px] sm:max-w-[180px]">
-                    <JaggedCatSilhouette
-                      catName={cat.name}
-                      completionPercentage={cat.completionPercentage}
-                      completedCount={cat.completedCount}
-                      totalRequired={cat.totalFrequency}
-                      photoUrl={cat.photoUrl}
-                    />
+              {/* Tasks */}
+              <div className="p-2 sm:p-3 bg-white flex-1 flex flex-col justify-between">
+                <div className="space-y-1 sm:space-y-1.5">
+                  {cat.tasks.map((task) => {
+                    const completed = task.completedCount || 0;
+                    const isCounter = task.type === "counter";
+                    const started = isCounter && completed > 0 && !task.isDone;
+                    const timeDisplay = formatTime(task.lastLoggedAt);
+
+                    return (
+                      <div
+                        key={task._id}
+                        onClick={() => handleToggleTask(cat._id, task)}
+                        className={`cursor-pointer border-2 border-black px-2 py-1.5 flex items-center justify-between transition-all select-none relative min-h-[40px] ${task.isDone
+                            ? "bg-paper text-ink-muted"
+                            : started
+                              ? "bg-highlight/20 hover:border-black shadow-[2px_2px_0_0_var(--ink)]"
+                              : "bg-white text-black hover:border-black shadow-[2px_2px_0_0_var(--ink)]"
+                          }`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          {isCounter ? (
+                            <div
+                              className={`min-w-[36px] sm:min-w-[40px] h-6 px-1.5 border-2 border-black flex items-center justify-center font-mono font-black text-[10px] transition-colors shrink-0 ${task.isDone
+                                  ? "bg-ink text-highlight"
+                                  : started
+                                    ? "bg-highlight text-black"
+                                    : "bg-white text-black"
+                                }`}
+                            >
+                              <span className="leading-none">
+                                {completed}/{task.frequency}
+                              </span>
+                            </div>
+                          ) : (
+                            <div
+                              className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-xs transition-colors shrink-0 ${task.isDone ? "bg-ink text-highlight" : "bg-white"
+                                }`}
+                            >
+                              {task.isDone && (
+                                <Check className="w-3.5 h-3.5 stroke-[4]" />
+                              )}
+                            </div>
+                          )}
+
+                          <div className="min-w-0 flex-1">
+                            <p
+                              className={`font-mono text-[11px] sm:text-xs font-bold uppercase tracking-tight truncate leading-tight ${task.isDone
+                                  ? "line-through text-zinc-400"
+                                  : "text-black"
+                                }`}
+                            >
+                              {task.title}
+                            </p>
+                            {task.lastLoggedBy && (
+                              <p className="text-[9px] font-mono text-accent font-bold truncate leading-tight">
+                                {task.lastLoggedBy}
+                                {timeDisplay ? ` • ${timeDisplay}` : ""}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {started && (
+                          <span className="shrink-0 ml-1.5 font-mono text-[8px] font-black uppercase bg-highlight text-black border border-black px-1 py-0.5">
+                            In&nbsp;progress
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Compact progress strip — mobile only */}
+              <div
+                onClick={() => setSelectedCatForDetail(cat)}
+                className="md:hidden bg-paper border-t-2 border-black px-2.5 py-1.5 flex items-center justify-between cursor-pointer hover:bg-paper-hover transition-colors active:bg-paper-card"
+                title="Tap for details and activity log"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-9 h-9 shrink-0 bg-ink border-2 border-black flex flex-col items-center justify-center">
+                    <span className="font-mono font-black text-highlight text-[10px] leading-none">
+                      {cat.completionPercentage}%
+                    </span>
+                    <span className="font-mono font-black text-paper text-[7px] leading-none mt-0.5">
+                      {cat.completedCount}/{cat.totalFrequency}
+                    </span>
                   </div>
-                </div>
-
-                {/* Bottom strip — progress summary */}
-                <div className="bg-white border-t-3 border-black px-2.5 py-1.5 flex items-center justify-between gap-2 group-hover:bg-paper-hover transition-colors">
                   <div className="min-w-0">
                     <p className="text-[10px] font-mono font-bold uppercase text-black leading-tight">
-                      {cat.completedCount}/{cat.totalFrequency} done
-                      {pending > 0 && (
-                        <span className="text-accent">
-                          {" "}· {pending} left
-                        </span>
-                      )}
+                      View details
                     </p>
-                    <p className="text-[9px] font-mono text-ink-muted leading-tight flex items-center gap-1">
-                      <span>tap to view tasks</span>
-                      <ExternalLink className="w-2.5 h-2.5" />
+                    <p className="text-[9px] font-mono text-ink-muted leading-tight">
+                      Tap for activity log
                     </p>
                   </div>
-                  <ChevronRightIcon />
                 </div>
-              </button>
-            );
-          })}
+                <ChevronRightIcon />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -280,7 +363,7 @@ export default function CatDashboard({
 function ChevronRightIcon() {
   return (
     <svg
-      className="w-3.5 h-3.5 shrink-0 text-ink-muted group-hover:text-black transition-colors"
+      className="w-3.5 h-3.5 shrink-0 text-ink-muted"
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"

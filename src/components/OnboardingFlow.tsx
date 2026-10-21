@@ -32,8 +32,12 @@ export default function OnboardingFlow({
   const joinHouseholdMutation = useMutation(api.households.joinHousehold);
 
   const effectiveUserId = clerkUser?.id;
-  const effectiveUserName =
-    clerkUser?.fullName || clerkUser?.firstName || "Roommate";
+  const clerkEmail =
+    clerkUser?.primaryEmailAddress?.emailAddress ||
+    clerkUser?.emailAddresses?.[0]?.emailAddress ||
+    "";
+  const clerkName =
+    clerkUser?.fullName || clerkUser?.firstName || "";
 
   const liveCurrentUserData = useQuery(
     api.users.currentUser,
@@ -44,7 +48,7 @@ export default function OnboardingFlow({
     if (effectiveUserId && syncUserMutation) {
       syncUserMutation({
         clerkId: effectiveUserId,
-        name: effectiveUserName,
+        name: clerkName || "Roommate",
       }).catch((err: any) => {
         console.warn("Convex user sync:", err);
       });
@@ -53,6 +57,7 @@ export default function OnboardingFlow({
   }, [effectiveUserId]);
 
   const currentHousehold = liveCurrentUserData?.household || null;
+  const storedName = liveCurrentUserData?.name;
 
   const handleCreateHousehold = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,12 +141,42 @@ export default function OnboardingFlow({
     return <div className="p-6 font-mono text-sm text-ink-muted">Loading…</div>;
   }
 
+  // ============================================================
+  // SIGNED OUT — require sign-in before showing create/join tabs
+  // ============================================================
+  if (!effectiveUserId) {
+    return (
+      <div className="w-full bg-paper border-4 border-ink shadow-[6px_6px_0px_0px_var(--ink)] p-6 sm:p-8">
+        <div className="border-b-3 border-black pb-4 mb-6">
+          <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black">
+            Welcome
+          </h2>
+          <p className="text-xs font-mono text-ink-muted mt-1">
+            Sign up or sign in to create or join a household.
+          </p>
+        </div>
+
+        <SignInButton mode="modal">
+          <button className="punk-button w-full bg-accent text-white py-3 px-4 text-sm font-black flex items-center justify-center gap-2 hover:bg-accent-hover">
+            SIGN UP / SIGN IN
+          </button>
+        </SignInButton>
+      </div>
+    );
+  }
+
+  // Name shown in the header: use saved Convex name if set, otherwise email.
+  const displayUserLabel =
+    storedName && storedName !== "Roommate"
+      ? storedName
+      : clerkEmail || "Signed in";
+
   return (
     <div className="w-full bg-paper border-4 border-ink shadow-[6px_6px_0px_0px_var(--ink)] p-6 sm:p-8">
       <div className="border-b-3 border-black pb-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-black">
-            HOUSEHOLD SETUP
+            HOUSEHOLD
           </h2>
           <p className="text-xs font-mono text-ink-muted mt-1">
             Create a shared household or join an existing one with an invite
@@ -150,18 +185,8 @@ export default function OnboardingFlow({
         </div>
 
         <div className="text-xs font-mono font-bold text-ink-muted flex items-center gap-2">
-          <span>
-            USER: <strong className="text-black">{effectiveUserName}</strong>
-          </span>
-          {effectiveUserId ? (
-            <UserButton />
-          ) : (
-            <SignInButton mode="modal">
-              <button className="punk-button bg-highlight text-black px-3 py-1 text-xs font-bold border-2 border-black shadow-[2px_2px_0_0_var(--accent)]">
-                SIGN UP / SIGN IN
-              </button>
-            </SignInButton>
-          )}
+          <span className="truncate max-w-[180px]">{displayUserLabel}</span>
+          <UserButton />
         </div>
       </div>
 
@@ -241,7 +266,7 @@ export default function OnboardingFlow({
                   : "bg-white text-black hover:bg-zinc-100"
                 }`}
             >
-              CREATE HOUSEHOLD
+              CREATE
             </button>
 
             <button
@@ -255,7 +280,7 @@ export default function OnboardingFlow({
                   : "bg-white text-black hover:bg-zinc-100"
                 }`}
             >
-              JOIN WITH CODE
+              JOIN
             </button>
           </div>
 
@@ -269,7 +294,7 @@ export default function OnboardingFlow({
                   type="text"
                   value={householdName}
                   onChange={(e) => setHouseholdName(e.target.value)}
-                  placeholder="e.g. Apt 4B, The Alley Loft"
+                  placeholder="e.g. Apt 4B"
                   required
                   className="w-full bg-white border-3 border-black p-3 font-mono font-bold text-sm text-black focus:outline-none focus:border-accent"
                 />
@@ -278,7 +303,7 @@ export default function OnboardingFlow({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="punk-button w-full bg-accent text-white py-3 px-4 text-xs font-bold flex items-center justify-center gap-2 hover:bg-accent-hover"
+                className="punk-button w-full bg-accent text-white py-3 px-4 text-xs font-bold flex items-center justify-center gap-2 hover:bg-accent-hover disabled:opacity-50"
               >
                 <span>{isSubmitting ? "CREATING..." : "CREATE HOUSEHOLD ➔"}</span>
               </button>

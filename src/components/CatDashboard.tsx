@@ -7,7 +7,7 @@ import JaggedCatSilhouette from "./JaggedCatSilhouette";
 import CatSetupModal from "./CatSetupModal";
 import CatDetailModal from "./CatDetailModal";
 import { formatTime } from "@/lib/formatTime";
-import { Check, Plus, ExternalLink, AlertTriangle, LogOut } from "lucide-react";
+import { Check, Plus, ExternalLink, AlertTriangle, LogOut, Copy } from "lucide-react";
 
 interface TaskItem {
   _id: string;
@@ -55,6 +55,7 @@ export default function CatDashboard({
   const [selectedCatForDetail, setSelectedCatForDetail] =
     useState<CatBlockData | null>(null);
   const [todayString, setTodayString] = useState("");
+  const [copiedCode, setCopiedCode] = useState(false);
 
   useEffect(() => {
     setTodayString(new Date().toISOString().split("T")[0]);
@@ -107,15 +108,46 @@ export default function CatDashboard({
     }
   };
 
+  const copyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(inviteCode);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
+    } catch {
+      // Clipboard API unavailable
+    }
+  };
+
   return (
     <div className="w-full max-w-6xl mx-auto space-y-5 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b-2 border-black/20">
-        <h1 className="text-xl sm:text-3xl font-black uppercase tracking-tight text-black truncate">
-          {householdName}
-        </h1>
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-3 border-b-2 border-black/20">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-3xl font-black uppercase tracking-tight text-black truncate">
+            {householdName}
+          </h1>
+          <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-ink-muted">
+              Invite
+            </span>
+            <button
+              onClick={copyCode}
+              className="inline-flex items-center gap-1.5 bg-ink text-highlight px-2 py-1 border border-black font-mono font-black text-xs tracking-wider hover:bg-accent hover:text-white transition-colors"
+              title="Copy invite code"
+            >
+              <span>{inviteCode || "——————"}</span>
+              <Copy className="w-3 h-3" />
+            </button>
+            {copiedCode && (
+              <span className="text-[10px] font-mono text-accent font-bold">
+                Copied!
+              </span>
+            )}
+          </div>
+        </div>
+
         <button
           onClick={() => setIsAddCatOpen(true)}
-          className="punk-button w-full sm:w-auto bg-highlight text-black px-3.5 py-2 sm:py-1.5 text-xs font-black flex items-center justify-center sm:justify-start gap-1 hover:bg-highlight-hover"
+          className="punk-button w-full sm:w-auto bg-highlight text-black px-3.5 py-2 sm:py-1.5 text-xs font-black flex items-center justify-center sm:justify-start gap-1 hover:bg-highlight-hover shrink-0"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>ADD CAT</span>
@@ -190,27 +222,32 @@ export default function CatDashboard({
                             : "bg-white text-black hover:border-black shadow-[2px_2px_0_0_var(--ink)]"
                         }`}
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div
-                          className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-xs transition-colors shrink-0 ${task.isDone
-                              ? "bg-ink text-highlight"
-                              : started
-                                ? "bg-highlight text-black"
-                                : "bg-white"
-                            }`}
-                        >
-                          {isCounter ? (
-                            <span className="text-[10px]">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        {isCounter ? (
+                          <div
+                            className={`min-w-[44px] h-7 px-2 border-2 border-black flex items-center justify-center font-mono font-black text-[11px] transition-colors shrink-0 ${task.isDone
+                                ? "bg-ink text-highlight"
+                                : started
+                                  ? "bg-highlight text-black"
+                                  : "bg-white text-black"
+                              }`}
+                          >
+                            <span className="leading-none">
                               {completed}/{task.frequency}
                             </span>
-                          ) : (
-                            task.isDone && (
+                          </div>
+                        ) : (
+                          <div
+                            className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-xs transition-colors shrink-0 ${task.isDone ? "bg-ink text-highlight" : "bg-white"
+                              }`}
+                          >
+                            {task.isDone && (
                               <Check className="w-3.5 h-3.5 stroke-[4]" />
-                            )
-                          )}
-                        </div>
+                            )}
+                          </div>
+                        )}
 
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <p
                             className={`font-mono text-xs font-bold uppercase tracking-tight truncate ${task.isDone
                                 ? "line-through text-zinc-400"
@@ -242,7 +279,6 @@ export default function CatDashboard({
         ))}
       </div>
 
-      {/* Danger Zone — leave household, tucked below the grid */}
       {onRequestLeave && (
         <div className="pt-4 border-t-2 border-black/20">
           <div className="bg-white border-3 border-black p-4 sm:p-5 shadow-[4px_4px_0_0_var(--ink)]">

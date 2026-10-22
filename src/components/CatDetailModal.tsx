@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import JaggedCatSilhouette from "./JaggedCatSilhouette";
+import CatIcon from "./CatIcon";
 import EditCatModal from "./EditCatModal";
 import TaskNoteModal from "./TaskNoteModal";
 import { formatTime } from "@/lib/formatTime";
@@ -26,6 +26,7 @@ export interface CatDetailData {
   _id: string;
   name: string;
   photoUrl?: string;
+  personality?: string;
   tasks: CatDetailTask[];
   totalFrequency: number;
   completedCount: number;
@@ -108,7 +109,6 @@ export default function CatDetailModal({
       return;
     }
 
-    // Unchecking → no prompt
     if (task.isDone && task.logs && task.logs.length > 0) {
       try {
         const lastLog = task.logs[task.logs.length - 1];
@@ -119,7 +119,6 @@ export default function CatDetailModal({
       return;
     }
 
-    // Opening a note prompt for completing
     setPendingNote({ task });
   };
 
@@ -191,8 +190,9 @@ export default function CatDetailModal({
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6 mb-4 sm:mb-6">
             <div className="md:col-span-5 bg-paper-card border-2 border-black p-3 sm:p-4 flex flex-col items-center justify-center">
               <div className="w-full max-w-[150px] sm:max-w-[170px]">
-                <JaggedCatSilhouette
+                <CatIcon
                   catName={cat.name}
+                  personality={cat.personality}
                   completionPercentage={cat.completionPercentage}
                   completedCount={cat.completedCount}
                   totalRequired={cat.totalFrequency}
@@ -221,23 +221,25 @@ export default function CatDetailModal({
                       <div
                         key={task._id}
                         onClick={() => handleTaskClick(task)}
-                        className={`cursor-pointer border-2 border-black p-2.5 transition-all select-none min-h-[44px] ${task.isDone
+                        className={`cursor-pointer border-2 border-black p-2.5 transition-all select-none min-h-[44px] ${
+                          task.isDone
                             ? "bg-paper text-ink-muted"
                             : started
-                              ? "bg-highlight/20 shadow-[2px_2px_0_0_var(--ink)]"
-                              : "bg-white text-black shadow-[2px_2px_0_0_var(--ink)]"
-                          }`}
+                            ? "bg-highlight/20 shadow-[2px_2px_0_0_var(--ink)]"
+                            : "bg-white text-black shadow-[2px_2px_0_0_var(--ink)]"
+                        }`}
                       >
                         <div className="flex items-center justify-between gap-2.5">
                           <div className="flex items-center gap-2.5 min-w-0">
                             {isCounter ? (
                               <div
-                                className={`min-w-[44px] h-7 px-2 border-2 border-black flex items-center justify-center font-mono font-black text-[11px] transition-colors shrink-0 ${task.isDone
+                                className={`min-w-[44px] h-7 px-2 border-2 border-black flex items-center justify-center font-mono font-black text-[11px] transition-colors shrink-0 ${
+                                  task.isDone
                                     ? "bg-ink text-highlight"
                                     : started
-                                      ? "bg-highlight text-black"
-                                      : "bg-white text-black"
-                                  }`}
+                                    ? "bg-highlight text-black"
+                                    : "bg-white text-black"
+                                }`}
                               >
                                 <span className="leading-none">
                                   {completed}/{task.frequency}
@@ -245,10 +247,11 @@ export default function CatDetailModal({
                               </div>
                             ) : (
                               <div
-                                className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-xs transition-colors shrink-0 ${task.isDone
+                                className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-xs transition-colors shrink-0 ${
+                                  task.isDone
                                     ? "bg-ink text-highlight"
                                     : "bg-white"
-                                  }`}
+                                }`}
                               >
                                 {task.isDone && (
                                   <Check className="w-3.5 h-3.5 stroke-[4]" />
@@ -258,10 +261,11 @@ export default function CatDetailModal({
 
                             <div className="min-w-0">
                               <p
-                                className={`font-mono text-xs font-bold uppercase tracking-tight truncate ${task.isDone
+                                className={`font-mono text-xs font-bold uppercase tracking-tight truncate ${
+                                  task.isDone
                                     ? "line-through text-zinc-400"
                                     : "text-black"
-                                  }`}
+                                }`}
                               >
                                 {task.title}
                               </p>

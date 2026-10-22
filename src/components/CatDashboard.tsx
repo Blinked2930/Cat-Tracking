@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import JaggedCatSilhouette from "./JaggedCatSilhouette";
+import CatIcon from "./CatIcon";
 import CatSetupModal from "./CatSetupModal";
 import CatDetailModal from "./CatDetailModal";
 import TaskNoteModal from "./TaskNoteModal";
@@ -34,6 +34,7 @@ interface CatBlockData {
   _id: string;
   name: string;
   photoUrl?: string;
+  personality?: string;
   tasks: TaskItem[];
   totalFrequency: number;
   completedCount: number;
@@ -126,7 +127,6 @@ export default function CatDashboard({
   const handleToggleTask = async (catId: string, task: TaskItem) => {
     if (!isLiveBackend) return;
 
-    // If the task is already done and we're unchecking → no note prompt
     if (task.isDone && task.logs && task.logs.length > 0) {
       try {
         const lastLog = task.logs[task.logs.length - 1];
@@ -137,7 +137,6 @@ export default function CatDashboard({
       return;
     }
 
-    // Otherwise open the note modal
     const cat = activeCats.find((c) => c._id === catId);
     setPendingNote({
       catId,
@@ -185,7 +184,6 @@ export default function CatDashboard({
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-3 sm:space-y-5">
-      {/* Household row */}
       <div className="bg-white border-2 sm:border-3 border-black shadow-[3px_3px_0_0_var(--ink)] px-2.5 sm:px-3.5 py-2 flex items-center justify-between gap-2">
         <div className="min-w-0 flex items-center gap-2 sm:gap-3 flex-1">
           <h1 className="text-sm sm:text-lg font-black uppercase tracking-tight text-black truncate">
@@ -217,7 +215,6 @@ export default function CatDashboard({
         </button>
       </div>
 
-      {/* Cats with tasks */}
       <div className="space-y-2.5 sm:space-y-4">
         {activeCats.length === 0 && (
           <div className="text-center py-10 px-4 border-2 border-dashed border-black/20 bg-white/50">
@@ -228,12 +225,13 @@ export default function CatDashboard({
         )}
 
         <div
-          className={`grid gap-3 sm:gap-5 ${activeCats.length === 1
+          className={`grid gap-3 sm:gap-5 ${
+            activeCats.length === 1
               ? "grid-cols-1 max-w-xl mx-auto"
               : activeCats.length === 2
-                ? "grid-cols-1 md:grid-cols-2"
-                : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-            }`}
+              ? "grid-cols-1 md:grid-cols-2"
+              : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+          }`}
         >
           {activeCats.map((cat) => (
             <div
@@ -254,8 +252,9 @@ export default function CatDashboard({
                 className="hidden md:flex p-4 bg-paper border-b-3 border-black flex-col items-center justify-center relative cursor-pointer group hover:bg-paper-hover transition-colors"
                 title="Click to view details and activity log"
               >
-                <JaggedCatSilhouette
+                <CatIcon
                   catName={cat.name}
+                  personality={cat.personality}
                   completionPercentage={cat.completionPercentage}
                   completedCount={cat.completedCount}
                   totalRequired={cat.totalFrequency}
@@ -279,22 +278,24 @@ export default function CatDashboard({
                       <div
                         key={task._id}
                         onClick={() => handleToggleTask(cat._id, task)}
-                        className={`cursor-pointer border-2 border-black px-2 py-1.5 flex items-center justify-between transition-all select-none relative min-h-[40px] ${task.isDone
+                        className={`cursor-pointer border-2 border-black px-2 py-1.5 flex items-center justify-between transition-all select-none relative min-h-[40px] ${
+                          task.isDone
                             ? "bg-paper text-ink-muted"
                             : started
-                              ? "bg-highlight/20 hover:border-black shadow-[2px_2px_0_0_var(--ink)]"
-                              : "bg-white text-black hover:border-black shadow-[2px_2px_0_0_var(--ink)]"
-                          }`}
+                            ? "bg-highlight/20 hover:border-black shadow-[2px_2px_0_0_var(--ink)]"
+                            : "bg-white text-black hover:border-black shadow-[2px_2px_0_0_var(--ink)]"
+                        }`}
                       >
                         <div className="flex items-center gap-2 min-w-0 flex-1">
                           {isCounter ? (
                             <div
-                              className={`min-w-[36px] sm:min-w-[40px] h-6 px-1.5 border-2 border-black flex items-center justify-center font-mono font-black text-[10px] transition-colors shrink-0 ${task.isDone
+                              className={`min-w-[36px] sm:min-w-[40px] h-6 px-1.5 border-2 border-black flex items-center justify-center font-mono font-black text-[10px] transition-colors shrink-0 ${
+                                task.isDone
                                   ? "bg-ink text-highlight"
                                   : started
-                                    ? "bg-highlight text-black"
-                                    : "bg-white text-black"
-                                }`}
+                                  ? "bg-highlight text-black"
+                                  : "bg-white text-black"
+                              }`}
                             >
                               <span className="leading-none">
                                 {completed}/{task.frequency}
@@ -302,8 +303,9 @@ export default function CatDashboard({
                             </div>
                           ) : (
                             <div
-                              className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-xs transition-colors shrink-0 ${task.isDone ? "bg-ink text-highlight" : "bg-white"
-                                }`}
+                              className={`w-5 h-5 border-2 border-black flex items-center justify-center font-mono font-black text-xs transition-colors shrink-0 ${
+                                task.isDone ? "bg-ink text-highlight" : "bg-white"
+                              }`}
                             >
                               {task.isDone && (
                                 <Check className="w-3.5 h-3.5 stroke-[4]" />
@@ -313,10 +315,11 @@ export default function CatDashboard({
 
                           <div className="min-w-0 flex-1">
                             <p
-                              className={`font-mono text-[11px] sm:text-xs font-bold uppercase tracking-tight truncate leading-tight ${task.isDone
+                              className={`font-mono text-[11px] sm:text-xs font-bold uppercase tracking-tight truncate leading-tight ${
+                                task.isDone
                                   ? "line-through text-zinc-400"
                                   : "text-black"
-                                }`}
+                              }`}
                             >
                               {task.title}
                             </p>

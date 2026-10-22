@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import PunkDropdown from "./PunkDropdown";
+import PersonalityPicker from "./PersonalityPicker";
+import { DEFAULT_PERSONALITY, PersonalityKey } from "@/lib/personalities";
 import { Plus, Trash2, X } from "lucide-react";
 
 interface RoutineDraft {
@@ -34,6 +36,9 @@ export default function CatSetupModal({
   const createTaskMutation = useMutation(api.tasks.createTask);
 
   const [catName, setCatName] = useState("");
+  const [personality, setPersonality] = useState<PersonalityKey>(
+    DEFAULT_PERSONALITY
+  );
   const [routines, setRoutines] = useState<RoutineDraft[]>([
     { title: "Morning Feeding", type: "checkbox", frequency: 1 },
     { title: "Evening Wet Food", type: "checkbox", frequency: 1 },
@@ -47,7 +52,6 @@ export default function CatSetupModal({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Reset frequency to 1 when type becomes checkbox
     if (newRoutineType === "checkbox" && newRoutineFreq !== 1) {
       setNewRoutineFreq(1);
     }
@@ -60,7 +64,8 @@ export default function CatSetupModal({
       {
         title: newRoutineTitle.trim(),
         type: newRoutineType,
-        frequency: newRoutineType === "checkbox" ? 1 : Math.max(1, newRoutineFreq),
+        frequency:
+          newRoutineType === "checkbox" ? 1 : Math.max(1, newRoutineFreq),
       },
     ]);
     setNewRoutineTitle("");
@@ -83,6 +88,7 @@ export default function CatSetupModal({
       const catId = await createCatMutation({
         householdId: householdId as any,
         name: catName.trim(),
+        personality,
       });
 
       for (const routine of routines) {
@@ -90,17 +96,20 @@ export default function CatSetupModal({
           catId,
           title: routine.title,
           type: routine.type,
-          frequency: routine.type === "checkbox" ? 1 : routine.frequency,
+          frequency:
+            routine.type === "checkbox" ? 1 : routine.frequency,
         });
       }
 
       onCatCreated?.({
         _id: catId,
         name: catName.trim(),
+        personality,
         tasks: routines,
       });
 
       setCatName("");
+      setPersonality(DEFAULT_PERSONALITY);
       setRoutines([
         { title: "Morning Feeding", type: "checkbox", frequency: 1 },
         { title: "Evening Wet Food", type: "checkbox", frequency: 1 },
@@ -154,6 +163,8 @@ export default function CatSetupModal({
             />
           </div>
 
+          <PersonalityPicker value={personality} onChange={setPersonality} />
+
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-[10px] font-mono font-black uppercase text-ink-muted">
@@ -174,7 +185,9 @@ export default function CatSetupModal({
                       </p>
                       <p className="text-[10px] text-ink-muted">
                         {r.type === "counter" ? "Counter" : "Checkbox"} ·{" "}
-                        {r.type === "checkbox" ? "1x/day" : `${r.frequency}x/day`}
+                        {r.type === "checkbox"
+                          ? "1x/day"
+                          : `${r.frequency}x/day`}
                       </p>
                     </div>
                     <button
@@ -222,10 +235,11 @@ export default function CatSetupModal({
                   type="button"
                   onClick={addRoutine}
                   disabled={!newRoutineTitle.trim()}
-                  className={`punk-button bg-highlight text-black px-3 py-1.5 text-xs font-black flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed ${newRoutineType === "counter"
+                  className={`punk-button bg-highlight text-black px-3 py-1.5 text-xs font-black flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    newRoutineType === "counter"
                       ? "sm:col-span-2"
                       : "sm:col-span-5"
-                    }`}
+                  }`}
                 >
                   <Plus className="w-3.5 h-3.5" />
                   Add

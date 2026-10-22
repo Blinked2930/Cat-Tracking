@@ -18,6 +18,7 @@ export default defineSchema({
     householdId: v.id("households"),
     name: v.string(),
     photoUrl: v.optional(v.string()),
+    personality: v.optional(v.string()),
   }).index("by_household", ["householdId"]),
 
   tasks: defineTable({

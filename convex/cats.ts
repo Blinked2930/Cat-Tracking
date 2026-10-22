@@ -2,14 +2,12 @@ import { mutation, query, MutationCtx, QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { Id } from "./_generated/dataModel";
 
-/**
- * Add a single cat to a household.
- */
 export const createCat = mutation({
   args: {
     householdId: v.id("households"),
     name: v.string(),
     photoUrl: v.optional(v.string()),
+    personality: v.optional(v.string()),
   },
   handler: async (
     ctx: MutationCtx,
@@ -17,6 +15,7 @@ export const createCat = mutation({
       householdId: Id<"households">;
       name: string;
       photoUrl?: string;
+      personality?: string;
     }
   ) => {
     const trimmed = args.name.trim();
@@ -26,21 +25,20 @@ export const createCat = mutation({
       householdId: args.householdId,
       name: trimmed,
       photoUrl: args.photoUrl,
+      personality: args.personality || "grumpy",
     });
 
     return catId;
   },
 });
 
-/**
- * Update a cat's name and/or photo.
- */
 export const updateCat = mutation({
   args: {
     catId: v.id("cats"),
     name: v.optional(v.string()),
     photoUrl: v.optional(v.string()),
     clearPhoto: v.optional(v.boolean()),
+    personality: v.optional(v.string()),
   },
   handler: async (
     ctx: MutationCtx,
@@ -49,6 +47,7 @@ export const updateCat = mutation({
       name?: string;
       photoUrl?: string;
       clearPhoto?: boolean;
+      personality?: string;
     }
   ) => {
     const cat = await ctx.db.get(args.catId);
@@ -68,6 +67,10 @@ export const updateCat = mutation({
       patch.photoUrl = args.photoUrl;
     }
 
+    if (args.personality !== undefined) {
+      patch.personality = args.personality;
+    }
+
     if (Object.keys(patch).length > 0) {
       await ctx.db.patch(args.catId, patch);
     }
@@ -76,16 +79,12 @@ export const updateCat = mutation({
   },
 });
 
-/**
- * Delete a cat along with its tasks and today's/all logs.
- */
 export const deleteCat = mutation({
   args: { catId: v.id("cats") },
   handler: async (ctx: MutationCtx, args: { catId: Id<"cats"> }) => {
     const cat = await ctx.db.get(args.catId);
     if (!cat) throw new Error("Cat not found");
 
-    // Delete all tasks for this cat
     const tasks = await ctx.db
       .query("tasks")
       .withIndex("by_cat", (q) => q.eq("catId", args.catId))
@@ -94,7 +93,6 @@ export const deleteCat = mutation({
       await ctx.db.delete(task._id);
     }
 
-    // Delete all taskLogs for this cat
     const logs = await ctx.db
       .query("taskLogs")
       .withIndex("by_cat_and_date", (q) => q.eq("catId", args.catId))
@@ -104,14 +102,10 @@ export const deleteCat = mutation({
     }
 
     await ctx.db.delete(args.catId);
-
     return { success: true };
   },
 });
 
-/**
- * Generate a Convex upload URL for cat photos.
- */
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx: MutationCtx) => {
@@ -119,9 +113,6 @@ export const generateUploadUrl = mutation({
   },
 });
 
-/**
- * Batch-create a set of cats + tasks for household setup.
- */
 export const saveHouseholdSetup = mutation({
   args: {
     householdId: v.id("households"),
@@ -130,6 +121,7 @@ export const saveHouseholdSetup = mutation({
         name: v.string(),
         photoUrl: v.optional(v.string()),
         photoStorageId: v.optional(v.string()),
+        personality: v.optional(v.string()),
         tasks: v.array(
           v.object({
             title: v.string(),
@@ -148,13 +140,15 @@ export const saveHouseholdSetup = mutation({
       let resolvedPhotoUrl = cat.photoUrl;
 
       if (cat.photoStorageId) {
-        resolvedPhotoUrl = (await ctx.storage.getUrl(cat.photoStorageId)) || cat.photoUrl;
+        resolvedPhotoUrl =
+          (await ctx.storage.getUrl(cat.photoStorageId)) || cat.photoUrl;
       }
 
       const catId = await ctx.db.insert("cats", {
         householdId: args.householdId,
         name: cat.name.trim(),
         photoUrl: resolvedPhotoUrl,
+        personality: cat.personality || "grumpy",
       });
 
       for (const task of cat.tasks) {
